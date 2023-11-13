@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.adapter.FragmentViewHolder
+import com.home.mindsnap.databinding.TutorialLayoutBinding
 import com.home.mindsnap.databinding.WelcomeLayoutBinding
 import com.home.mindsnap.fragment.tutorial.pager.FirstFragment
 import com.home.mindsnap.fragment.tutorial.pager.SecondFragment
@@ -17,7 +18,7 @@ class TutorialFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View {
-        val bind = WelcomeLayoutBinding.inflate(inflater, container, false)
+        val bind = TutorialLayoutBinding.inflate(inflater, container, false)
         bind.pager.adapter = FragmentAdapter(this)
         return bind.root
     }

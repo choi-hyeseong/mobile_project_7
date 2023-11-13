@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">MindSnap</string>
+    <string name="title">Memorize\nwith Image</string>
+    <string name="start_btn">Get Started  →</string>
 </resources>
