@@ -3,6 +3,7 @@ package com.home.mindsnap
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.home.mindsnap.databinding.ActivityMainBinding
+import com.home.mindsnap.fragment.MainFragment
 import com.home.mindsnap.fragment.tutorial.WelcomeFragment
 
 class MainActivity : AppCompatActivity(), ActivityCallback {
@@ -22,6 +23,6 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
     }
 
     override fun saveUserTutorialEnded() {
-
+        supportFragmentManager.beginTransaction().replace(R.id.frame, MainFragment()).commit()
     }
 }
