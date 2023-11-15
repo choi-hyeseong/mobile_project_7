@@ -2,6 +2,7 @@ package com.home.mindsnap.fragment.tutorial
 
 import android.graphics.Color
 import android.os.Bundle
+import android.os.SystemClock
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
@@ -12,6 +13,8 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.home.mindsnap.R
 import com.home.mindsnap.databinding.WelcomeLayoutBinding
+import com.home.mindsnap.dialog.LoadingDialog
+import kotlin.concurrent.thread
 
 class WelcomeFragment : Fragment() {
 
@@ -26,8 +29,19 @@ class WelcomeFragment : Fragment() {
         builder.setSpan(span, 14,19, Spanned.SPAN_EXCLUSIVE_INCLUSIVE)
         textView.text = builder
         bind.button.setOnClickListener {
-            requireActivity().supportFragmentManager.beginTransaction().replace(R.id.frame, TutorialFragment()).commit()
+            //dialog test
+            val dialog = LoadingDialog(requireContext())
+            dialog.show()
+            thread {
+                SystemClock.sleep(2000) //메인 쓰레드 블락하면 안보임
+                requireActivity().runOnUiThread {
+                    dialog.hide()
+                    requireActivity().supportFragmentManager.beginTransaction().replace(R.id.frame, TutorialFragment()).commit()
+                }
+            }
+
         }
+
         return bind.root
     }
 }
