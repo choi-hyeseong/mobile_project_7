@@ -5,6 +5,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import com.home.mindsnap.model.Image
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.ArrayList
 import java.util.concurrent.ThreadLocalRandom
@@ -22,6 +24,13 @@ class LocalGalleryDao(private val context: Context) : GalleryDao {
         return result
     }
 
+    override suspend fun saveImage(image: Bitmap, fileName: String) {
+        withContext(Dispatchers.IO) {
+            val output = context.openFileOutput(fileName, Context.MODE_PRIVATE)
+            image.compress(Bitmap.CompressFormat.JPEG, 100, output)
+            output.close()
+        }
+    }
     private fun readImage(filePath: String): Bitmap? {
         return BitmapFactory.decodeFile(filePath)
     }
