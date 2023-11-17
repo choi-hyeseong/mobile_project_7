@@ -37,7 +37,10 @@ android {
 }
 
 dependencies {
-
+    implementation "com.squareup.retrofit2:converter-gson:2.9.0" //retrofit
+    implementation 'com.squareup.retrofit2:retrofit:2.4.0'
+    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.2.0' //okhttp
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.9' //corutine
     implementation 'androidx.core:core-ktx:1.8.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.5.0'
