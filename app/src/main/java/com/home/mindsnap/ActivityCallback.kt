@@ -2,7 +2,7 @@ package com.home.mindsnap
 
 interface ActivityCallback {
 
-    //튜토리얼 완료했다고 저장
-    fun saveUserTutorialEnded()
+    //튜토리얼 완료해서 프래그먼트 이동
+    fun navigateToGallery()
 
 }

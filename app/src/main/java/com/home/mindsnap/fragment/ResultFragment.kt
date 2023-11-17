@@ -1,4 +1,6 @@
 package com.home.mindsnap.fragment
 
-class ResultFragment {
+import androidx.fragment.app.Fragment
+
+class ResultFragment : Fragment() {
 }

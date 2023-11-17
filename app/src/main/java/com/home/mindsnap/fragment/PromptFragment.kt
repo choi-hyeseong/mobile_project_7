@@ -1,4 +1,6 @@
 package com.home.mindsnap.fragment
 
-class PromptFragment {
+import androidx.fragment.app.Fragment
+
+class PromptFragment : Fragment() {
 }
