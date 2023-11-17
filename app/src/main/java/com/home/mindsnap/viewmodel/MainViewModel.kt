@@ -7,10 +7,10 @@ import com.home.mindsnap.usecase.GetUserFirstJoined
 
 class MainViewModel(private val getUserFirstJoined: GetUserFirstJoined) : ViewModel() {
 
+    private val firstJoinLiveData : LiveData<Boolean> = MutableLiveData(getUserFirstJoined.isFirstJoined())
     fun isFirstJoined() : LiveData<Boolean> {
-        val liveData = MutableLiveData<Boolean>()
-        liveData.value = getUserFirstJoined.isFirstJoined()
-        return liveData
+        //이렇게 해야 매 rotation시 로드 안함
+        return firstJoinLiveData
     }
 
 }
