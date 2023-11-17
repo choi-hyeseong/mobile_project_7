@@ -1,21 +1,20 @@
 package com.home.mindsnap.type
 
-import java.lang.Exception
+enum class ArtStyle(private val value: String) {
+    NONE(""), THIRD("3D"), FANTASY("fantasy");
 
-enum class ArtStyle {
-    NONE, THIRD, FANTASY;
+    override fun toString(): String {
+        return value
+    }
 
-
-    fun fromString(style: String): ArtStyle {
-        return when (style) {
-            "3D" -> THIRD
-            "fantasy" -> FANTASY
-            else -> try {
-                ArtStyle.valueOf(style)
-            }
-            catch (e: IllegalArgumentException) {
-                NONE
-            }
+    companion object {
+        fun fromString(style: String): ArtStyle {
+            return values().find { it.value.equals(style, true) } ?: try {
+                    ArtStyle.valueOf(style)
+                }
+                catch (e: IllegalArgumentException) {
+                    NONE
+                }
         }
     }
 }
