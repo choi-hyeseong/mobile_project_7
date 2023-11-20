@@ -14,11 +14,12 @@ class GenerateImageTest {
 
     lateinit var generateImage: GenerateImage
     lateinit var saveLocalImage : SaveLocalImage
+    lateinit var imageGen : ImageGenRepository
     @Before
     fun init() {
-        val imageGen = mockk<ImageGenRepository>()
+        imageGen = mockk<ImageGenRepository>()
+        generateImage = GenerateImage(imageGen)
         saveLocalImage = mockk()
-        generateImage = GenerateImage(imageGen, saveLocalImage)
         coEvery { imageGen.generateImage(any(), any()) } returns mockk()
         coEvery { saveLocalImage.saveImage(any(), any()) } returns Unit
 
@@ -32,7 +33,7 @@ class GenerateImageTest {
 
         runBlocking {
             generateImage.generateImage(input, artStyle)
-            coVerify(atLeast = 1) { saveLocalImage.saveImage(any(), any()) } //뭐했길래 통과되지..?
+            coVerify(atLeast = 1) { imageGen.generateImage(any(), any()) }
         }
     }
 }
