@@ -5,6 +5,9 @@ import com.home.mindsnap.type.ArtStyle
 class PromptGenerator {
 
     fun generate(prompt: String, artStyle: ArtStyle) : String {
-        return "create art with prompt $prompt with art style $artStyle"
+        return when(artStyle) {
+            ArtStyle.NONE -> prompt
+            else -> "$prompt with art style $artStyle"
+        }
     }
 }

@@ -9,19 +9,23 @@ import com.home.mindsnap.repository.user.PreferenceUserRepository
 import com.home.mindsnap.repository.user.dao.PreferenceUserDao
 import com.home.mindsnap.usecase.GetUserFirstJoined
 import com.home.mindsnap.viewmodel.MainViewModel
+
 class MainActivity : AppCompatActivity(), ActivityCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val bind = ActivityMainBinding.inflate(layoutInflater)
         setContentView(bind.root)
-        val viewModel = MainViewModel(GetUserFirstJoined(PreferenceUserRepository(PreferenceUserDao(getSharedPreferences("test", MODE_PRIVATE)))))
-        viewModel.isFirstJoined().observe(this) {tutorial ->
+        val viewModel = MainViewModel(
+            GetUserFirstJoined(
+                PreferenceUserRepository(
+                    PreferenceUserDao(getSharedPreferences("test", MODE_PRIVATE)))))
+        viewModel.isFirstJoined().observe(this) { tutorial ->
             if (tutorial)
-                supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment()).commit()
+                supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment())
+                    .commit()
             else
                 navigateToGallery()
         }
-
     }
 
     override fun navigateToGallery() {

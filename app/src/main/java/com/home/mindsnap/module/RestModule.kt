@@ -10,15 +10,20 @@ import java.net.URL
 class RestModule {
 
     private val URL: String = "https://api.openai.com/v1/"
-    private val TOKEN: String = ""
+    private val TOKEN: String = "" //TODO
 
     //header값 지정해주는 okhttp client (oauth 사용을 위해 bearer 헤더 추가)
     fun getOkHttpClient(): OkHttpClient {
-        return OkHttpClient.Builder().addInterceptor(OpenAIIInterceptor(URL, TOKEN)).build()
+        return OkHttpClient.Builder().addInterceptor(OpenAIIInterceptor(TOKEN)).build()
     }
 
-    fun getOpenAIService() : OpenAIGenService {
-        return Retrofit.Builder().client(getOkHttpClient()).baseUrl(URL).addConverterFactory(GsonConverterFactory.create()).build().create(OpenAIGenService::class.java)
+
+    fun provideRetrofit() : Retrofit {
+        return Retrofit.Builder().baseUrl(URL).client(getOkHttpClient()).addConverterFactory(GsonConverterFactory.create()).build()
+    }
+
+    fun getOpenAIService(retrofit: Retrofit) : OpenAIGenService {
+        return retrofit.create(OpenAIGenService::class.java)
     }
 
 
