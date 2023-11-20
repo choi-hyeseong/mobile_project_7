@@ -1,17 +1,10 @@
 package com.home.mindsnap.usecase
 
-import android.graphics.Bitmap
-import com.home.mindsnap.repository.gallery.dao.GalleryDao
 import com.home.mindsnap.repository.image.ImageGenRepository
-import com.home.mindsnap.repository.image.LocalImageGenRepository
-import com.home.mindsnap.repository.image.PromptGenerator
-import com.home.mindsnap.repository.image.dao.ImageGenDao
-import com.home.mindsnap.repository.image.dao.OpenAIImageGenDao
 import com.home.mindsnap.type.ArtStyle
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test

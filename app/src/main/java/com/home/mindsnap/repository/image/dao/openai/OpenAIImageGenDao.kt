@@ -1,7 +1,8 @@
-package com.home.mindsnap.repository.image.dao
+package com.home.mindsnap.repository.image.dao.openai
 
 import android.graphics.Bitmap
 import com.home.mindsnap.repository.image.PromptGenerator
+import com.home.mindsnap.repository.image.dao.ImageGenDao
 import com.home.mindsnap.type.ArtStyle
 
 class OpenAIImageGenDao(private val generator : PromptGenerator) : ImageGenDao {
