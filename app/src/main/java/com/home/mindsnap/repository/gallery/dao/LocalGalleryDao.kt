@@ -26,7 +26,7 @@ class LocalGalleryDao(private val context: Context) : GalleryDao {
 
     override suspend fun saveImage(image: Bitmap, fileName: String) {
         withContext(Dispatchers.IO) {
-            val output = context.openFileOutput(fileName, Context.MODE_PRIVATE)
+            val output = context.openFileOutput("$fileName.jpeg", Context.MODE_PRIVATE)
             image.compress(Bitmap.CompressFormat.JPEG, 100, output)
             output.close()
         }

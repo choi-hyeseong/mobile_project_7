@@ -14,6 +14,8 @@ interface ActivityCallback {
         navigateToPrompt(null)
     }
 
+    fun requestFinish()
+
     fun navigateToPrompt(prompt: String?)
 
 }
