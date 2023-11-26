@@ -1,6 +1,7 @@
 package com.home.mindsnap.repository.gallery
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import com.home.mindsnap.model.Image
 import com.home.mindsnap.repository.gallery.dao.GalleryDao
@@ -18,5 +19,13 @@ class LocalGalleryRepository(private val galleryDao: GalleryDao) : GalleryReposi
 
     override suspend fun getAllImages(): List<Image> {
         return galleryDao.getAllImages()
+    }
+
+    override fun shareImage(fileName: String): Intent {
+        return galleryDao.shareImage(fileName)
+    }
+
+    override fun isImageExists(fileName: String): Boolean {
+        return galleryDao.isImageExists(fileName)
     }
 }

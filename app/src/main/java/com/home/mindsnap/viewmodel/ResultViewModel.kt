@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import com.home.mindsnap.event.Event
 import com.home.mindsnap.repository.image.PromptGenerator
 import com.home.mindsnap.type.ArtStyle
+import com.home.mindsnap.usecase.ExistImage
 import com.home.mindsnap.usecase.GenerateImage
 import com.home.mindsnap.usecase.SaveLocalImage
 import com.home.mindsnap.usecase.ShareImage
@@ -20,6 +21,7 @@ import java.io.File
 class ResultViewModel(
     private val generateImage: GenerateImage,
     private val saveLocalImage: SaveLocalImage,
+    private val existImage : ExistImage,
     private val shareImage: ShareImage,
     private val promptGenerator: PromptGenerator
 ) : ViewModel() {
@@ -32,7 +34,6 @@ class ResultViewModel(
     private val fileName: String by lazy {
         promptGenerator.generate(prompt, artStyle) //fileName 가져올때는 prompt와 style 존재
     }
-    private var isSaved = false
 
 
     //intent로 받은 프롬프트와 스타일.
@@ -47,7 +48,7 @@ class ResultViewModel(
     }
 
     fun shareImage() {
-        if (isSaved)
+        if (existImage.existImage(fileName))
             shareLiveData.value = shareImage.shareImage(fileName)
         else
             toastLiveData.postValue(Event("이미지를 저장한 후에 공유해주시길 바랍니다.")) //TODO
@@ -58,7 +59,6 @@ class ResultViewModel(
             resultImage.value?.let {
                 saveLocalImage.saveImage(it, fileName)
                 toastLiveData.postValue(Event("이미지 저장이 완료되었습니다.")) //TODO
-                isSaved = true
             }
         }
     }

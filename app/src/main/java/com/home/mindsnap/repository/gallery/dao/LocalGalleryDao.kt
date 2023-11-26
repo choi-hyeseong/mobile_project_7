@@ -1,9 +1,11 @@
 package com.home.mindsnap.repository.gallery.dao
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
+import androidx.core.content.FileProvider
 import com.home.mindsnap.model.Image
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -18,7 +20,7 @@ class LocalGalleryDao(private val context: Context) : GalleryDao {
         val result = ArrayList<Image>()
         dir.listFiles()?.let {
             for (file: File in it) {
-                readImage(file.absolutePath)?.let { image -> result.add(Image(file.name, image)) }
+                readImage(file.absolutePath)?.let { image -> result.add(Image(file.name.replace(".jpeg", ""), image)) } //확장자 제거후 입력
             }
         }
         return result
@@ -33,5 +35,16 @@ class LocalGalleryDao(private val context: Context) : GalleryDao {
     }
     private fun readImage(filePath: String): Bitmap? {
         return BitmapFactory.decodeFile(filePath)
+    }
+
+    override fun shareImage(fileName: String): Intent {
+        return Intent(Intent.ACTION_SEND).apply {
+            type = "image/*"
+            putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(context, "com.home.mindsnap.fileprovider", File(context.filesDir, "${fileName}.jpeg")))
+        }
+    }
+
+    override fun isImageExists(fileName: String): Boolean {
+        return File(context.filesDir, "$fileName.jpeg").exists()
     }
 }

@@ -20,6 +20,7 @@ import com.home.mindsnap.repository.image.OpenAIImageGenRepository
 import com.home.mindsnap.repository.image.PromptGenerator
 import com.home.mindsnap.repository.image.dao.openai.OpenAIImageGenDao
 import com.home.mindsnap.type.ArtStyle
+import com.home.mindsnap.usecase.ExistImage
 import com.home.mindsnap.usecase.GenerateImage
 import com.home.mindsnap.usecase.SaveLocalImage
 import com.home.mindsnap.usecase.ShareImage
@@ -41,6 +42,7 @@ class ResultFragment : Fragment() {
         val bind = ResultLayoutBinding.inflate(layoutInflater, container, false)
         val promptGenerator = PromptGenerator()
         val module = RestModule()
+        val repo =LocalGalleryRepository(LocalGalleryDao(requireContext().applicationContext))
         val viewmodel = ResultViewModel(
             GenerateImage(
                 OpenAIImageGenRepository(
@@ -48,7 +50,7 @@ class ResultFragment : Fragment() {
                         promptGenerator,
                         module.getOpenAIService(module.provideRetrofit()),
                         BitmapGenerator()))),
-            SaveLocalImage(LocalGalleryRepository(LocalGalleryDao(requireContext().applicationContext))), ShareImage(requireContext()),
+            SaveLocalImage(repo), ExistImage(repo), ShareImage(repo),
             promptGenerator)
 
         viewmodel.loadingLiveData.observe(viewLifecycleOwner) { loading ->
