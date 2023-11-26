@@ -7,6 +7,7 @@ import com.home.mindsnap.databinding.ActivityMainBinding
 import com.home.mindsnap.fragment.GalleryFragment
 import com.home.mindsnap.fragment.PromptFragment
 import com.home.mindsnap.fragment.ResultFragment
+import com.home.mindsnap.fragment.tutorial.TutorialFragment
 import com.home.mindsnap.fragment.tutorial.WelcomeFragment
 import com.home.mindsnap.repository.gallery.dao.LocalGalleryDao
 import com.home.mindsnap.repository.user.PreferenceUserRepository
@@ -29,11 +30,17 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
                     PreferenceUserDao(getSharedPreferences("test", MODE_PRIVATE)))))
         viewModel.isFirstJoined().observe(this) { tutorial ->
             if (tutorial)
-                //supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment()).commit()
-                navigateToResult("Tiger on the Mountain", ArtStyle.NONE)
+                supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment()).commit()
+                //navigateToResult("Tiger on the Mountain", ArtStyle.NONE)
             else
                 navigateToGallery()
         }
+        // TODO intent
+    }
+
+    override fun navigateToTutorial() {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.frame, TutorialFragment()).commit()
     }
 
     override fun navigateToGallery() {
