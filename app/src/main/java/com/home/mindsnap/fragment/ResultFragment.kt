@@ -42,7 +42,7 @@ class ResultFragment : Fragment() {
         val bind = ResultLayoutBinding.inflate(layoutInflater, container, false)
         val promptGenerator = PromptGenerator()
         val module = RestModule()
-        val repo =LocalGalleryRepository(LocalGalleryDao(requireContext().applicationContext))
+        val repo = LocalGalleryRepository(LocalGalleryDao(requireContext().applicationContext))
         val viewmodel = ResultViewModel(
             GenerateImage(
                 OpenAIImageGenRepository(
@@ -65,11 +65,14 @@ class ResultFragment : Fragment() {
         }
 
         viewmodel.toastLiveData.observe(viewLifecycleOwner) { event ->
-            event.getContent()
-                ?.let { Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show() }
+            event.getContent()?.let {
+                val message =
+                    if (it.isResourceMessage()) it.getResourceMessage(requireContext()) else it.message
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            }
         }
 
-        viewmodel.textLiveData.observe(viewLifecycleOwner) {text ->
+        viewmodel.textLiveData.observe(viewLifecycleOwner) { text ->
             bind.resultPrompt.text = text
         }
 
