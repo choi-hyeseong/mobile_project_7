@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
             if (tutorial)
                 //supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment()).commit()
                 navigateToGallery()
-                //navigateToResult("Tiger on the Mountain", ArtStyle.NONE)
+                //navigateToResult("Butterfly on the Mountain", ArtStyle.NONE)
             else
                 navigateToGallery()
         }
