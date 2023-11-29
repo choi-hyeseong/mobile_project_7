@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/fragmentContainer"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainFragment">
+
+    <RelativeLayout
+        android:id="@+id/mainscreen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#F1F8FF">
+
+        <TextView
+            android:id="@+id/GalleryTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="40dp"
+            android:gravity="center"
+            android:text="Gallery"
+            android:fontFamily="@font/jakarta"
+            android:textSize="35sp"
+            android:textStyle="bold" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/btnNextPage"
+            android:layout_below="@+id/GalleryTitle"
+            android:layout_margin="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="-62dp"
+            app:spanCount="2"/>
+<!--        <GridLayout-->
+<!--            android:id="@+id/gridLayout"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:layout_above="@+id/btnNextPage"-->
+<!--            android:layout_below="@+id/GalleryTitle"-->
+<!--            android:layout_margin="16dp"-->
+<!--            android:layout_marginStart="16dp"-->
+<!--            android:layout_marginTop="16dp"-->
+<!--            android:layout_marginEnd="16dp"-->
+<!--            android:layout_marginBottom="-62dp"-->
+<!--            android:columnCount="2"-->
+<!--            android:rowCount="10" />-->
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scaleType="centerCrop"
+            android:adjustViewBounds="true"
+            android:layout_margin="4dp"/>
+
+        <HorizontalScrollView
+            android:id="@+id/smallImagesScrollView"
+            android:contentDescription="Scrolling"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/btnNextPage"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:id="@+id/smallImagesContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+
+        </HorizontalScrollView>
+
+        <Button
+            android:id="@+id/btnNextPage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="150dp"
+            android:layout_alignParentBottom="true"
+            android:layout_gravity="center_horizontal"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="30dp"
+            android:textSize="16dp"
+            android:fontFamily="@font/jakarta"
+            android:text="Create Image" />
+
+    </RelativeLayout>
+
+
+</FrameLayout>

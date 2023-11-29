@@ -31,7 +31,8 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
         viewModel.isFirstJoined().observe(this) { tutorial ->
             if (tutorial)
                 //supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment()).commit()
-                navigateToResult("Tiger on the Mountain", ArtStyle.NONE)
+                navigateToGallery()
+                //navigateToResult("Tiger on the Mountain", ArtStyle.NONE)
             else
                 navigateToGallery()
         }
