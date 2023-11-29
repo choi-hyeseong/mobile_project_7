@@ -6,6 +6,8 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.home.mindsnap.R
+import com.home.mindsnap.component.StringData
 import com.home.mindsnap.event.Event
 import com.home.mindsnap.repository.image.PromptGenerator
 import com.home.mindsnap.type.ArtStyle
@@ -28,7 +30,7 @@ class ResultViewModel(
 
     val resultImage: MutableLiveData<Bitmap> = MutableLiveData()
     val loadingLiveData: MutableLiveData<Boolean> = MutableLiveData()
-    val toastLiveData: MutableLiveData<Event<String>> = MutableLiveData()
+    val toastLiveData: MutableLiveData<Event<StringData>> = MutableLiveData()
     val textLiveData: MutableLiveData<String> = MutableLiveData()
     val shareLiveData: MutableLiveData<Intent> = MutableLiveData()
     private val fileName: String by lazy {
@@ -51,14 +53,14 @@ class ResultViewModel(
         if (existImage.existImage(fileName))
             shareLiveData.value = shareImage.shareImage(fileName)
         else
-            toastLiveData.postValue(Event("이미지를 저장한 후에 공유해주시길 바랍니다.")) //TODO
+            toastLiveData.postValue(Event(StringData(R.string.before_download, null)))
     }
 
     fun saveImage() {
         CoroutineScope(Dispatchers.IO).launch {
             resultImage.value?.let {
                 saveLocalImage.saveImage(it, fileName)
-                toastLiveData.postValue(Event("이미지 저장이 완료되었습니다.")) //TODO
+                toastLiveData.postValue(Event(StringData(R.string.save_complete, null)))
             }
         }
     }

@@ -8,5 +8,6 @@
     <string name="result_download">Download</string>
     <string name="gallery">Gallery</string>
     <string name="create_image">Create Image</string>
-
+    <string name="before_download">이미지를 저장한 후에 공유해주시길 바랍니다.</string>
+    <string name="save_complete">이미지를 저장이 완료되었습니다.</string>
 </resources>
