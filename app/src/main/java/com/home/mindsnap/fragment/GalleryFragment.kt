@@ -1,241 +1,128 @@
 package com.home.mindsnap.fragment
 
+import android.content.Context
 import android.graphics.Color
 import android.graphics.Rect
 import android.os.Bundle
-import android.util.Log
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.FrameLayout
-import android.widget.HorizontalScrollView
 import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.LinearLayout.LayoutParams
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.home.mindsnap.R
+import com.home.mindsnap.ActivityCallback
+import com.home.mindsnap.databinding.GalleryLayoutBinding
+import com.home.mindsnap.databinding.ImageLayoutBinding
+import com.home.mindsnap.model.Image
+import com.home.mindsnap.repository.gallery.LocalGalleryRepository
+import com.home.mindsnap.repository.gallery.dao.LocalGalleryDao
+import com.home.mindsnap.usecase.GetAllImages
+import com.home.mindsnap.usecase.ShareImage
+import com.home.mindsnap.viewmodel.GalleryViewModel
 
-class ImageAdapter(
-    private val context: Fragment,
-    private val imageResources: Array<Int>,
-    private val onImageClick: (Int) -> Unit
-) : RecyclerView.Adapter<ImageAdapter.ImageViewHolder>() {
+class GalleryFragment : Fragment() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ImageViewHolder {
-        val imageView = ImageView(context.requireContext())
-        val screenWidth = context.resources.displayMetrics.widthPixels
-        val imageSize = screenWidth / 2 - 64 // 전체 가로 화면의 1/2 크기로 설정
-
-        val params = LinearLayout.LayoutParams(
-            imageSize,
-            imageSize
-        )
-        imageView.layoutParams = params
-        imageView.scaleType = ImageView.ScaleType.CENTER_CROP
-        imageView.setOnClickListener {
-            onImageClick(imageResources[imageView.tag as Int])
-        }
-        return ImageViewHolder(imageView)
-    }
-
-    override fun onBindViewHolder(holder: ImageViewHolder, position: Int) {
-        val imageView = holder.itemView as ImageView
-        imageView.setImageResource(imageResources[position])
-        imageView.tag = position
-    }
-
-    override fun getItemCount(): Int {
-        return imageResources.size
-    }
-
-    class ImageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
-}
-public class GalleryFragment : Fragment() {
-
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var btnNextPage: Button
-    private lateinit var galleryTitle: TextView
     private lateinit var blurLayer: ImageView
-    private lateinit var enlargedImageView: ImageView
-    private lateinit var smallImagesContainer: LinearLayout
+    private var imageLayoutBinding: ImageLayoutBinding? = null
+    private var callback: ActivityCallback? = null
+    private val viewModel by lazy {
+        val repo = LocalGalleryRepository(LocalGalleryDao(requireContext()))
+        GalleryViewModel(GetAllImages(repo), ShareImage(repo))
+    }
 
-    private val imageResources = arrayOf(
-        R.drawable.img_1,
-        R.drawable.img_2,
-        R.drawable.img_3,
-        R.drawable.img_4,
-        R.drawable.img_5,
-        R.drawable.img_6,
-        R.drawable.img_6  // ... 이미지 추가
-    )
 
-    private val smallImageViews = mutableListOf<ImageView>()
-    private val imageSpacing = 16 // Image spacing
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        callback = context as ActivityCallback?
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        callback = null
+        imageLayoutBinding = null //memory 누수 문제 예방
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val view = inflater.inflate(R.layout.fragment_main, container, false)
+        val view = GalleryLayoutBinding.inflate(layoutInflater, container, false)
 
-        galleryTitle = view.findViewById(R.id.GalleryTitle)
-        btnNextPage = view.findViewById(R.id.btnNextPage)
-        smallImagesContainer = view.findViewById(R.id.smallImagesContainer)
 
+
+        view.recyclerView.apply {
+            layoutManager = GridLayoutManager(requireContext(), 2)
+            addItemDecoration(GridSpacingItemDecoration(2, 16, true))
+        }
+
+
+
+        view.btnNextPage.setOnClickListener {
+            callback?.navigateToPrompt()
+        }
+        //이미지 로드/갱신시 adapter 갱신
+        viewModel.imageLiveData.observe(viewLifecycleOwner) { image ->
+            view.recyclerView.adapter = ImageAdapter(this, image)
+            imageLayoutBinding?.recyclerView2?.adapter = SmallImageAdapter(this, image)
+        }
+
+        viewModel.intentLiveData.observe(viewLifecycleOwner) {
+            startActivity(it)
+        }
+
+        initChildView(view)
+        return view.root
+    }
+
+    private fun initChildView(view: GalleryLayoutBinding) {
+        // ummm...
         // Initialize blurLayer and enlargedImageView
-        blurLayer = ImageView(requireContext())
-        blurLayer.setBackgroundColor(Color.parseColor("#80000000")) // Semi-transparent gray background
-        blurLayer.scaleType = ImageView.ScaleType.FIT_XY
-        blurLayer.visibility = View.GONE
-        val blurLayerParams = FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.MATCH_PARENT
-        )
-        (view as FrameLayout).addView(blurLayer, blurLayerParams)
 
-        enlargedImageView = ImageView(requireContext())
-        enlargedImageView.scaleType = ImageView.ScaleType.CENTER_INSIDE
-        enlargedImageView.visibility = View.GONE
-        val enlargedImageViewParams = FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-        (view).addView(enlargedImageView, enlargedImageViewParams)
+        blurLayer = ImageView(requireContext()).apply {
+            setBackgroundColor(Color.parseColor("#80000000")) // Semi-transparent gray background
+            scaleType = ImageView.ScaleType.FIT_XY
+            visibility = View.GONE
 
-        val horizontalScrollView = HorizontalScrollView(requireContext())
-        smallImagesContainer = LinearLayout(requireContext())
-        smallImagesContainer.orientation = LinearLayout.HORIZONTAL
-        val smallImagesContainerParams = FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-        smallImagesContainerParams.gravity = Gravity.BOTTOM
-        Log.d("kkang",ViewGroup.LayoutParams.MATCH_PARENT.toString())
-        smallImagesContainerParams.bottomMargin = getScreenWidth() / 4
-
-        horizontalScrollView.addView(smallImagesContainer)
-        (view).addView(horizontalScrollView, smallImagesContainerParams)
-
-        galleryTitle.text = "Gallery"
-        val imageSpacing = 16
-        val smallImageWidth = getScreenWidth() / 4
-        val smallImageHeight = smallImageWidth
-
-        blurLayer.setOnClickListener {
-            blurLayer.visibility = View.GONE
-            enlargedImageView.visibility = View.GONE
-            smallImagesContainer.removeAllViews()
-        }
-        (blurLayer.layoutParams as FrameLayout.LayoutParams).gravity = Gravity.CENTER
-
-        recyclerView = view.findViewById(R.id.recyclerView)
-        recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
-        recyclerView.adapter = ImageAdapter(this, imageResources, ::onImageClick)
-        recyclerView.addItemDecoration(GridSpacingItemDecoration(2, imageSpacing, true))
-
-
-        for (i in imageResources.indices) {
-            val imageView = ImageView(requireContext())
-            imageView.setImageResource(imageResources[i])
-
-            val params = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-            params.weight = 1.0f
-            params.setMargins(imageSpacing, imageSpacing, imageSpacing, imageSpacing)
-
-            imageView.layoutParams = params
-
-            smallImageViews.add(imageView)
-
-            imageView.layoutParams = params
-            imageView.setOnClickListener {
-                enlargedImageView.setImageDrawable(imageView.drawable)
-                enlargedImageView.visibility = View.VISIBLE
-                blurLayer.visibility = View.VISIBLE
-                smallImagesContainer.removeAllViews()
-
-                for (otherImageView in smallImageViews) {
-                    val otherSmallImage = ImageView(requireContext())
-                    otherSmallImage.setImageDrawable(otherImageView.drawable)
-
-                    val smallParams =
-                        LinearLayout.LayoutParams(smallImageWidth, smallImageHeight)
-                    smallParams.setMargins(imageSpacing, 0, imageSpacing, 20)
-                    otherSmallImage.layoutParams = smallParams
-
-                    val parent = otherSmallImage.parent as? ViewGroup
-                    parent?.removeView(otherSmallImage)
-
-                    smallImagesContainer.addView(otherSmallImage)
-
-                    if (!smallImageViews.contains(otherImageView)) {
-                        smallImageViews.add(otherImageView)
-                    }
-
-                    otherSmallImage.setOnClickListener {
-                        enlargedImageView.setImageDrawable(otherImageView.drawable)
-                        enlargedImageView.visibility = View.VISIBLE
-                        blurLayer.visibility = View.VISIBLE
-                    }
-                }
+            setOnClickListener {
+                visibility = View.GONE
+                imageLayoutBinding?.root?.visibility = View.INVISIBLE
             }
-
-            smallImageViews.add(imageView)
+        }.also {
+            view.root.addView(
+                it, FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                ))
         }
 
-        btnNextPage.setOnClickListener {
-            Toast.makeText(requireContext(), "Create Image", Toast.LENGTH_SHORT).show()
+        val bind = ImageLayoutBinding.inflate(layoutInflater).apply {
+            root.visibility = View.INVISIBLE
+            recyclerView2.apply {
+                setHasFixedSize(true)
+                layoutManager =
+                    GridLayoutManager(requireContext(), 1, LinearLayoutManager.HORIZONTAL, false)
+            }
         }
-
-        return view
+        imageLayoutBinding = bind
+        view.root.addView(bind.root)
     }
 
-    private fun getScreenWidth(): Int {
-        val displayMetrics = resources.displayMetrics
-        return displayMetrics.widthPixels
-    }
-
-    private fun getScreenHeight(): Int {
-        val displayMetrics = resources.displayMetrics
-        return displayMetrics.heightPixels
-    }
-
-    private fun onImageClick(imageResource: Int) {
-        enlargedImageView.setImageResource(imageResource)
-        enlargedImageView.visibility = View.VISIBLE
+    private fun onImageClick(image: Image) {
+        imageLayoutBinding?.apply {
+            root.visibility = View.VISIBLE
+            imageView.setImageBitmap(image.bitmap)
+            share.setOnClickListener {
+                viewModel.shareImage(image.fileName)
+            }
+        }
         blurLayer.visibility = View.VISIBLE
-
-        smallImagesContainer.removeAllViews()
-
-        for (otherImageResource in imageResources) {
-            val otherSmallImage = ImageView(requireContext())
-            otherSmallImage.setImageResource(otherImageResource)
-
-            val smallParams = LinearLayout.LayoutParams(getScreenWidth() / 4-32, getScreenWidth() / 4 - 32)
-            smallParams.setMargins(0, 0, imageSpacing, 20)
-            otherSmallImage.layoutParams = smallParams
-
-            val parent = otherSmallImage.parent as? ViewGroup
-            parent?.removeView(otherSmallImage)
-
-            smallImagesContainer.addView(otherSmallImage)
-
-            otherSmallImage.setOnClickListener {
-                enlargedImageView.setImageResource(otherImageResource)
-                enlargedImageView.visibility = View.VISIBLE
-                blurLayer.visibility = View.VISIBLE
-            }
-        }
     }
 
-    class GridSpacingItemDecoration(
+    inner class GridSpacingItemDecoration(
         private val spanCount: Int,
         private val spacing: Int,
         private val includeEdge: Boolean
@@ -256,11 +143,93 @@ public class GalleryFragment : Fragment() {
                     outRect.top = spacing
                 }
                 outRect.bottom = spacing
-            } else {
+            }
+            else {
                 outRect.left = column * spacing / spanCount
                 outRect.right = spacing - (column + 1) * spacing / spanCount
                 if (position >= spanCount) {
                     outRect.top = spacing
+                }
+            }
+        }
+    }
+
+
+    inner class ImageAdapter(
+        private val context: Fragment,
+        private val images: List<Image>,
+    ) : RecyclerView.Adapter<ImageViewHolder>() {
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ImageViewHolder {
+            val imageView = ImageView(context.requireContext())
+            return ImageViewHolder(imageView)
+        }
+
+        override fun onBindViewHolder(holder: ImageViewHolder, position: Int) {
+            holder.bind(images[position])
+        }
+
+        override fun getItemCount(): Int {
+            return images.size
+        }
+
+    }
+
+    inner class ImageViewHolder(private val imageView: ImageView) :
+        RecyclerView.ViewHolder(imageView) {
+        fun bind(image: Image) {
+            val screenWidth = requireContext().resources.displayMetrics.widthPixels
+            val imageSize = screenWidth / 2 - 64 // 전체 가로 화면의 1/2 크기로 설정
+
+            val params = LayoutParams(
+                imageSize,
+                imageSize
+            )
+            imageView.layoutParams = params
+            imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+            imageView.setImageBitmap(image.bitmap)
+            imageView.setOnClickListener {
+                onImageClick(image)
+            }
+        }
+    }
+
+    inner class SmallImageAdapter(
+        private val context: Fragment,
+        private val images: List<Image>,
+    ) : RecyclerView.Adapter<SmallImageViewHolder>() {
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SmallImageViewHolder {
+            val imageView = ImageView(context.requireContext()).apply {
+                layoutParams = LayoutParams(200,200).also {
+                    it.setMargins(10,0,10,0)
+                }
+                scaleType = ImageView.ScaleType.CENTER_CROP
+
+            }
+            return SmallImageViewHolder(imageView)
+        }
+
+        override fun onBindViewHolder(holder: SmallImageViewHolder, position: Int) {
+            holder.bind(images[position])
+        }
+
+        override fun getItemCount(): Int {
+            return images.size
+        }
+
+    }
+
+    inner class SmallImageViewHolder(private val imageView: ImageView) :
+        RecyclerView.ViewHolder(imageView) {
+        fun bind(image: Image) {
+            imageView.apply {
+                setImageBitmap(image.bitmap)
+                setOnClickListener {
+                    imageLayoutBinding?.imageView?.setImageBitmap(image.bitmap)
+                    imageLayoutBinding?.share?.setOnClickListener {
+                        viewModel.shareImage(image.fileName)
+                    }
                 }
             }
         }
