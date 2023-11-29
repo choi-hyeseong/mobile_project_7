@@ -6,5 +6,7 @@
     <string name="result_title">Result</string>
     <string name="result_retry">Retry</string>
     <string name="result_download">Download</string>
+    <string name="gallery">Gallery</string>
+    <string name="create_image">Create Image</string>
 
 </resources>
