@@ -43,7 +43,6 @@ class LocalGalleryDao(private val context: Context) : GalleryDao {
     }
 
     override fun shareImage(fileName: String): Intent {
-        Log.w("asdf", context.fileList().contentToString())
         return Intent(Intent.ACTION_SEND).apply {
             type = "image/*"
             putExtra(
