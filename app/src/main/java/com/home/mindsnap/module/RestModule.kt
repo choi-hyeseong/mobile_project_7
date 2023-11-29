@@ -16,7 +16,7 @@ class RestModule {
 
     //header값 지정해주는 okhttp client (oauth 사용을 위해 bearer 헤더 추가)
     fun getOkHttpClient(): OkHttpClient {
-        return OkHttpClient.Builder().connectTimeout(30, TimeUnit.SECONDS).addInterceptor(OpenAIIInterceptor(TOKEN)).build()
+        return OkHttpClient.Builder().connectTimeout(60, TimeUnit.SECONDS).addInterceptor(OpenAIIInterceptor(TOKEN)).build()
     }
 
 
