@@ -20,7 +20,11 @@ class LocalGalleryDao(private val context: Context) : GalleryDao {
         val result = ArrayList<Image>()
         dir.listFiles()?.let {
             for (file: File in it) {
-                readImage(file.absolutePath)?.let { image -> result.add(Image(file.name.replace(".jpeg", ""), image)) } //확장자 제거후 입력
+                readImage(file.absolutePath)?.let { image ->
+                    result.add(
+                        Image(
+                            file.name, image))
+                } //확장자 제거후 입력 -> 확장자 포함에서 입력
             }
         }
         return result
@@ -28,23 +32,30 @@ class LocalGalleryDao(private val context: Context) : GalleryDao {
 
     override suspend fun saveImage(image: Bitmap, fileName: String) {
         withContext(Dispatchers.IO) {
-            val output = context.openFileOutput("$fileName.jpeg", Context.MODE_PRIVATE)
+            val output = context.openFileOutput("$fileName.jpg", Context.MODE_PRIVATE)
             image.compress(Bitmap.CompressFormat.JPEG, 100, output)
             output.close()
         }
     }
+
     private fun readImage(filePath: String): Bitmap? {
         return BitmapFactory.decodeFile(filePath)
     }
 
     override fun shareImage(fileName: String): Intent {
+        Log.w("asdf", context.fileList().contentToString())
         return Intent(Intent.ACTION_SEND).apply {
             type = "image/*"
-            putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(context, "com.home.mindsnap.fileprovider", File(context.filesDir, "${fileName}.jpeg")))
+            putExtra(
+                Intent.EXTRA_STREAM,
+                FileProvider.getUriForFile(
+                    context,
+                    "com.home.mindsnap.fileprovider",
+                    File(context.filesDir, fileName)))
         }
     }
 
     override fun isImageExists(fileName: String): Boolean {
-        return File(context.filesDir, "$fileName.jpeg").exists()
+        return context.fileList().map { it.split(".")[0] }.find { it.equals(fileName, ignoreCase = true) } != null
     }
 }
