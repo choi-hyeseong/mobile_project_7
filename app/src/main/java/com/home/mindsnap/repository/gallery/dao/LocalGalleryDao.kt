@@ -55,6 +55,7 @@ class LocalGalleryDao(private val context: Context) : GalleryDao {
     }
 
     override fun isImageExists(fileName: String): Boolean {
-        return context.fileList().map { it.split(".")[0] }.find { it.equals(fileName, ignoreCase = true) } != null
+        //filename도 동일하게 확장자 제거
+        return context.fileList().map { it.split(".")[0] }.find { it.equals(fileName.split(".")[0], ignoreCase = true) } != null
     }
 }
