@@ -48,8 +48,8 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
         supportFragmentManager.beginTransaction().replace(R.id.frame, GalleryFragment()).commit()
     }
 
-    override fun navigateToPrompt(prompt : String?) {
-        val fragment : PromptFragment = PromptFragment.newInstance(prompt)
+    override fun navigateToPrompt(prompt : String?, artStyle: ArtStyle?) {
+        val fragment : PromptFragment = PromptFragment.newInstance(prompt, artStyle)
         supportFragmentManager.beginTransaction().replace(R.id.frame, fragment).commit()
 
     }

@@ -12,11 +12,11 @@ interface ActivityCallback {
     fun navigateToResult(prompt : String, artStyle: ArtStyle)
 
     fun navigateToPrompt() {
-        navigateToPrompt(null)
+        navigateToPrompt(null, null)
     }
 
     fun requestFinish()
 
-    fun navigateToPrompt(prompt: String?)
+    fun navigateToPrompt(prompt: String?, artStyle: ArtStyle?)
 
 }
