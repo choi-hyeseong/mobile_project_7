@@ -80,6 +80,10 @@ class ResultFragment : Fragment() {
             startActivity(it)
         }
 
+        viewmodel.retryLiveData.observe(viewLifecycleOwner) { pair ->
+            callback?.navigateToPrompt(pair.first, pair.second)
+        }
+
         bind.resultShare.setOnClickListener {
             viewmodel.shareImage()
         }
@@ -89,7 +93,7 @@ class ResultFragment : Fragment() {
         }
 
         bind.resultRetry.setOnClickListener {
-            callback?.navigateToPrompt(bind.resultPrompt.text.toString()) //좀더 깔끔한 방법이 없을까라는 생각.. vm에서 처리할 수도 없음.
+            viewmodel.retryPrompt()
         }
 
 

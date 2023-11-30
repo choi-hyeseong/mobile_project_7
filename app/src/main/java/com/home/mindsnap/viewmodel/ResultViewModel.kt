@@ -33,6 +33,8 @@ class ResultViewModel(
     val toastLiveData: MutableLiveData<Event<StringData>> = MutableLiveData()
     val textLiveData: MutableLiveData<String> = MutableLiveData()
     val shareLiveData: MutableLiveData<Intent> = MutableLiveData()
+    val retryLiveData : MutableLiveData<Pair<String, ArtStyle>> = MutableLiveData() //retry 버튼 클릭시 vm에 있는 데이터 반환.
+
     private val fileName: String by lazy {
         promptGenerator.generate(prompt, artStyle) //fileName 가져올때는 prompt와 style 존재
     }
@@ -71,6 +73,9 @@ class ResultViewModel(
         notifyPromptChange(prompt)
     }
 
+    fun retryPrompt() {
+        retryLiveData.value = Pair(prompt, artStyle)
+    }
     private fun notifyPromptChange(prompt: String) {
         textLiveData.value = prompt
     }
