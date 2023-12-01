@@ -57,6 +57,7 @@
             android:layout_gravity="center_horizontal"
             android:fontFamily="@font/jakarta"
             android:text="@string/create_image"
+            android:background="@drawable/button_design"
             android:layout_margin="16dp"
             android:textSize="16dp"
             app:layout_constraintBottom_toBottomOf="parent"
