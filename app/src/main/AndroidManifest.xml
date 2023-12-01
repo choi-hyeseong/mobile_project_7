@@ -19,8 +19,16 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
+                <action android:name="intent.IMAGE_GENERATE"/>
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.DEFAULT" /> <!--DEFAULT 카테고리가 있어야 호출가능-->
+            </intent-filter>
+
+            <intent-filter android:autoVerify="true"> <!--For DeepLink-->
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="intent" android:host="genimage" />
             </intent-filter>
         </activity>
 

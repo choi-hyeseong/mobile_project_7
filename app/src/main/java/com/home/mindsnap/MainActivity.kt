@@ -2,9 +2,12 @@ package com.home.mindsnap
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.FragmentTransaction
 import com.home.mindsnap.databinding.ActivityMainBinding
+import com.home.mindsnap.fragment.ARTSTYLE
 import com.home.mindsnap.fragment.GalleryFragment
+import com.home.mindsnap.fragment.PROMPT
 import com.home.mindsnap.fragment.PromptFragment
 import com.home.mindsnap.fragment.ResultFragment
 import com.home.mindsnap.fragment.tutorial.TutorialFragment
@@ -14,11 +17,14 @@ import com.home.mindsnap.repository.user.PreferenceUserRepository
 import com.home.mindsnap.repository.user.dao.PreferenceUserDao
 import com.home.mindsnap.type.ArtStyle
 import com.home.mindsnap.usecase.GetUserFirstJoined
+import com.home.mindsnap.usecase.SaveUserVisited
 import com.home.mindsnap.viewmodel.MainViewModel
 import kotlinx.coroutines.runBlocking
 
 
 const val LOG_HEADER = "MINDSNAP"
+const val INTENT_IMAGE_GENERATE = "intent.IMAGE_GENERATE"
+
 class MainActivity : AppCompatActivity(), ActivityCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,16 +33,41 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
         val viewModel = MainViewModel(
             GetUserFirstJoined(
                 PreferenceUserRepository(
-                    PreferenceUserDao(getSharedPreferences("test", MODE_PRIVATE)))))
+                    PreferenceUserDao(getSharedPreferences("test", MODE_PRIVATE))
+                )
+            )
+        )
         viewModel.isFirstJoined().observe(this) { tutorial ->
             if (tutorial)
-                //supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment()).commit()
+            //supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment()).commit()
                 navigateToGallery()
-                //navigateToResult("Butterfly on the Sky", ArtStyle.NONE)
-            else
-                navigateToGallery()
+            //navigateToResult("Butterfly on the Sky", ArtStyle.NONE)
+            else {
+                //튜토리얼 완료되었을때만 인텐트 핸들링
+                //implicit intent
+                if (intent.hasExtra(PROMPT)) {
+                    navigateToResult(
+                        intent.getStringExtra(PROMPT)!!,
+                        ArtStyle.fromString(intent.getStringExtra(ARTSTYLE) ?: "")
+                    ) //has check, art style은 빈값이 올 수 있음
+                }
+                else if (intent.data != null) {
+                    //deep link
+                    // am start -W -a android.intent.action.VIEW -d "intent://genimage?prompt=a dog&artstyle=3D" com.home.mindsnap 로 호출가능
+                    val uri = intent.data!!
+                    val prompt = uri.getQueryParameter(PROMPT.lowercase())
+                    val artStyle = uri.getQueryParameter(ARTSTYLE.lowercase()) ?: ""
+                    if (prompt != null) {
+                        navigateToResult(prompt, ArtStyle.fromString(artStyle))
+                        Log.w(LOG_HEADER, "Deep link doesn't contain prompt parameter.")
+                    }
+                    else
+                        navigateToGallery() //좀더 깔끔하게 안되나..
+                }
+                else
+                    navigateToGallery()
+            }
         }
-        // TODO intent
     }
 
     override fun navigateToTutorial() {
@@ -48,8 +79,8 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
         supportFragmentManager.beginTransaction().replace(R.id.frame, GalleryFragment()).commit()
     }
 
-    override fun navigateToPrompt(prompt : String?, artStyle: ArtStyle?) {
-        val fragment : PromptFragment = PromptFragment.newInstance(prompt, artStyle)
+    override fun navigateToPrompt(prompt: String?, artStyle: ArtStyle?) {
+        val fragment: PromptFragment = PromptFragment.newInstance(prompt, artStyle)
         supportFragmentManager.beginTransaction().replace(R.id.frame, fragment).commit()
 
     }
@@ -59,6 +90,7 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
     }
 
     override fun navigateToResult(prompt: String, artStyle: ArtStyle) {
-        supportFragmentManager.beginTransaction().replace(R.id.frame, ResultFragment.newInstance(prompt, artStyle)).commit()
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.frame, ResultFragment.newInstance(prompt, artStyle)).commit()
     }
 }
