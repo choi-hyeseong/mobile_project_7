@@ -1,4 +1,4 @@
-package com.home.mindsnap.util
+package com.home.mindsnap.component
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
