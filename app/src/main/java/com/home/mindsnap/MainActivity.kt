@@ -3,6 +3,7 @@ package com.home.mindsnap
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import androidx.activity.viewModels
 import androidx.fragment.app.FragmentTransaction
 import com.home.mindsnap.databinding.ActivityMainBinding
 import com.home.mindsnap.fragment.ARTSTYLE
@@ -19,24 +20,22 @@ import com.home.mindsnap.type.ArtStyle
 import com.home.mindsnap.usecase.GetUserFirstJoined
 import com.home.mindsnap.usecase.SaveUserVisited
 import com.home.mindsnap.viewmodel.MainViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.runBlocking
 
 
 const val LOG_HEADER = "MINDSNAP"
 const val INTENT_IMAGE_GENERATE = "intent.IMAGE_GENERATE"
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity(), ActivityCallback {
+
+    private val viewModel : MainViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val bind = ActivityMainBinding.inflate(layoutInflater)
         setContentView(bind.root)
-        val viewModel = MainViewModel(
-            GetUserFirstJoined(
-                PreferenceUserRepository(
-                    PreferenceUserDao(getSharedPreferences("test", MODE_PRIVATE))
-                )
-            )
-        )
         viewModel.isFirstJoined().observe(this) { tutorial ->
             if (tutorial)
             //supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment()).commit()

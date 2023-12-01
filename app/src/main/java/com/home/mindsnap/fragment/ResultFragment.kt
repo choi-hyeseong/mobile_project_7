@@ -9,62 +9,42 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import com.home.mindsnap.ActivityCallback
 import com.home.mindsnap.LOG_HEADER
 import com.home.mindsnap.databinding.ResultLayoutBinding
 import com.home.mindsnap.dialog.LoadingDialog
-import com.home.mindsnap.module.RestModule
-import com.home.mindsnap.repository.gallery.LocalGalleryRepository
-import com.home.mindsnap.repository.gallery.dao.LocalGalleryDao
-import com.home.mindsnap.repository.image.OpenAIImageGenRepository
-import com.home.mindsnap.repository.image.PromptGenerator
-import com.home.mindsnap.repository.image.dao.openai.OpenAIImageGenDao
 import com.home.mindsnap.type.ArtStyle
-import com.home.mindsnap.usecase.ExistImage
-import com.home.mindsnap.usecase.GenerateImage
-import com.home.mindsnap.usecase.SaveLocalImage
-import com.home.mindsnap.usecase.ShareImage
-import com.home.mindsnap.util.BitmapGenerator
 import com.home.mindsnap.viewmodel.ResultViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
 const val PROMPT = "PROMPT"
 const val ARTSTYLE = "ARTSTYLE"
 
+@AndroidEntryPoint
 class ResultFragment : Fragment() {
 
     private var dialog: Dialog? = null //context bind시에만 활성화
     private var callback: ActivityCallback? = null
+    private val viewModel : ResultViewModel by viewModels()
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         val bind = ResultLayoutBinding.inflate(layoutInflater, container, false)
-        val promptGenerator = PromptGenerator()
-        val module = RestModule()
-        val repo = LocalGalleryRepository(LocalGalleryDao(requireContext().applicationContext))
-        val viewmodel = ResultViewModel(
-            GenerateImage(
-                OpenAIImageGenRepository(
-                    OpenAIImageGenDao(
-                        promptGenerator,
-                        module.getOpenAIService(module.provideRetrofit()),
-                        BitmapGenerator()))),
-            SaveLocalImage(repo), ExistImage(repo), ShareImage(repo),
-            promptGenerator)
-
-        viewmodel.loadingLiveData.observe(viewLifecycleOwner) { loading ->
+        viewModel.loadingLiveData.observe(viewLifecycleOwner) { loading ->
             if (loading)
                 dialog?.show()
             else
                 dialog?.hide()
         }
 
-        viewmodel.resultImage.observe(viewLifecycleOwner) { image ->
+        viewModel.resultImage.observe(viewLifecycleOwner) { image ->
             bind.resultImage.setImageBitmap(image)
         }
 
-        viewmodel.toastLiveData.observe(viewLifecycleOwner) { event ->
+        viewModel.toastLiveData.observe(viewLifecycleOwner) { event ->
             event.getContent()?.let {
                 val message =
                     if (it.isResourceMessage()) it.getResourceMessage(requireContext()) else it.message
@@ -72,28 +52,28 @@ class ResultFragment : Fragment() {
             }
         }
 
-        viewmodel.textLiveData.observe(viewLifecycleOwner) { text ->
+        viewModel.textLiveData.observe(viewLifecycleOwner) { text ->
             bind.resultPrompt.text = text
         }
 
-        viewmodel.shareLiveData.observe(viewLifecycleOwner) {
+        viewModel.shareLiveData.observe(viewLifecycleOwner) {
             startActivity(it)
         }
 
-        viewmodel.retryLiveData.observe(viewLifecycleOwner) { pair ->
+        viewModel.retryLiveData.observe(viewLifecycleOwner) { pair ->
             callback?.navigateToPrompt(pair.first, pair.second)
         }
 
         bind.resultShare.setOnClickListener {
-            viewmodel.shareImage()
+            viewModel.shareImage()
         }
 
         bind.resultDownload.setOnClickListener {
-            viewmodel.saveImage()
+            viewModel.saveImage()
         }
 
         bind.resultRetry.setOnClickListener {
-            viewmodel.retryPrompt()
+            viewModel.retryPrompt()
         }
 
 
@@ -105,8 +85,8 @@ class ResultFragment : Fragment() {
                 Log.e(LOG_HEADER, "prompt is null.")
                 callback?.requestFinish()
             }
-            viewmodel.setParameter(prompt, artStyle)
-            viewmodel.generateImage()
+            viewModel.setParameter(prompt, artStyle)
+            viewModel.generateImage()
         }
 
         return bind.root

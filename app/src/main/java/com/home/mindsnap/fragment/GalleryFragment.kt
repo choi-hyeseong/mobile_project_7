@@ -11,6 +11,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout.LayoutParams
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -23,16 +24,15 @@ import com.home.mindsnap.repository.gallery.dao.LocalGalleryDao
 import com.home.mindsnap.usecase.GetAllImages
 import com.home.mindsnap.usecase.ShareImage
 import com.home.mindsnap.viewmodel.GalleryViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class GalleryFragment : Fragment() {
 
     private lateinit var blurLayer: ImageView
     private var imageLayoutBinding: ImageLayoutBinding? = null
     private var callback: ActivityCallback? = null
-    private val viewModel by lazy {
-        val repo = LocalGalleryRepository(LocalGalleryDao(requireContext()))
-        GalleryViewModel(GetAllImages(repo), ShareImage(repo))
-    }
+    private val viewModel : GalleryViewModel by viewModels()
 
 
     override fun onAttach(context: Context) {

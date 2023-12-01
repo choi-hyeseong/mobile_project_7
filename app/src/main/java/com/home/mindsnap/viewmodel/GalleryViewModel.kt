@@ -9,14 +9,20 @@ import com.home.mindsnap.LOG_HEADER
 import com.home.mindsnap.model.Image
 import com.home.mindsnap.usecase.GetAllImages
 import com.home.mindsnap.usecase.ShareImage
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class GalleryViewModel(private val getAllImages: GetAllImages, private val shareImage: ShareImage) : ViewModel() {
+@HiltViewModel
+class GalleryViewModel @Inject constructor(
+    private val getAllImages: GetAllImages,
+    private val shareImage: ShareImage
+) : ViewModel() {
 
-    val imageLiveData : MutableLiveData<List<Image>> = MutableLiveData()
-    val intentLiveData : MutableLiveData<Intent> = MutableLiveData()
+    val imageLiveData: MutableLiveData<List<Image>> = MutableLiveData()
+    val intentLiveData: MutableLiveData<Intent> = MutableLiveData()
 
     init {
         getAllImage()
@@ -28,7 +34,7 @@ class GalleryViewModel(private val getAllImages: GetAllImages, private val share
         }
     }
 
-    fun shareImage(fileName : String) {
+    fun shareImage(fileName: String) {
         // 맞다 livedata set..
         intentLiveData.value = shareImage.shareImage(fileName)
     }

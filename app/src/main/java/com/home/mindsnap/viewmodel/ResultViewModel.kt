@@ -15,12 +15,15 @@ import com.home.mindsnap.usecase.ExistImage
 import com.home.mindsnap.usecase.GenerateImage
 import com.home.mindsnap.usecase.SaveLocalImage
 import com.home.mindsnap.usecase.ShareImage
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import javax.inject.Inject
 
-class ResultViewModel(
+@HiltViewModel
+class ResultViewModel @Inject constructor(
     private val generateImage: GenerateImage,
     private val saveLocalImage: SaveLocalImage,
     private val existImage : ExistImage,

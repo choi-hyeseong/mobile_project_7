@@ -4,8 +4,7 @@ import com.home.mindsnap.repository.image.PromptGenerator
 import com.home.mindsnap.repository.image.dao.openai.response.ImageDataResponse
 import com.home.mindsnap.repository.image.dao.openai.response.ImageResponse
 import com.home.mindsnap.type.ArtStyle
-import com.home.mindsnap.util.BitmapGenerator
-import io.mockk.coEvery
+import com.home.mindsnap.component.BitmapGenerator
 import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertNotNull
