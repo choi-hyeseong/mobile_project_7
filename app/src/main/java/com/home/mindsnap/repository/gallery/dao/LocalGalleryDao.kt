@@ -43,6 +43,7 @@ class LocalGalleryDao(private val context: Context) : GalleryDao {
     }
 
     override fun shareImage(fileName: String): Intent {
+        val name = if (fileName.contains(".")) fileName else fileName.plus(".jpg")
         return Intent(Intent.ACTION_SEND).apply {
             type = "image/*"
             putExtra(
@@ -50,7 +51,7 @@ class LocalGalleryDao(private val context: Context) : GalleryDao {
                 FileProvider.getUriForFile(
                     context,
                     "com.home.mindsnap.fileprovider",
-                    File(context.filesDir, fileName)))
+                    File(context.filesDir, name)))
         }
     }
 
