@@ -56,12 +56,12 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
                     val uri = intent.data!!
                     val prompt = uri.getQueryParameter(PROMPT.lowercase())
                     val artStyle = uri.getQueryParameter(ARTSTYLE.lowercase()) ?: ""
-                    if (prompt != null) {
+                    if (prompt != null)
                         navigateToResult(prompt, ArtStyle.fromString(artStyle))
+                    else {
                         Log.w(LOG_HEADER, "Deep link doesn't contain prompt parameter.")
-                    }
-                    else
                         navigateToGallery() //좀더 깔끔하게 안되나..
+                    }
                 }
                 else
                     navigateToGallery()
