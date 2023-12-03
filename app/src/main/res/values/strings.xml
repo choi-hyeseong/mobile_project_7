@@ -18,4 +18,5 @@
     <string name="_3d_string">3D</string>
     <string name="artistic_string">Artistic</string>
     <string name="small_button_string">See All</string>
+    <string name="prompt_empty">프롬프트는 빈값이 올 수 없습니다.</string>
 </resources>

@@ -39,7 +39,8 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
         viewModel.isFirstJoined().observe(this) { tutorial ->
             if (tutorial)
             //supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment()).commit()
-                navigateToGallery()
+                //navigateToGallery()
+                navigateToPrompt("a cat in the building", null)
             //navigateToResult("Butterfly on the Sky", ArtStyle.NONE)
             else {
                 //튜토리얼 완료되었을때만 인텐트 핸들링
