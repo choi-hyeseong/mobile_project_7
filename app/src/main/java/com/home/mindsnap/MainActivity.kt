@@ -11,6 +11,7 @@ import com.home.mindsnap.fragment.GalleryFragment
 import com.home.mindsnap.fragment.PROMPT
 import com.home.mindsnap.fragment.PromptFragment
 import com.home.mindsnap.fragment.ResultFragment
+import com.home.mindsnap.fragment.tutorial.CoachMarkFragment
 import com.home.mindsnap.fragment.tutorial.TutorialFragment
 import com.home.mindsnap.fragment.tutorial.WelcomeFragment
 import com.home.mindsnap.repository.gallery.dao.LocalGalleryDao
@@ -38,10 +39,7 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
         setContentView(bind.root)
         viewModel.isFirstJoined().observe(this) { tutorial ->
             if (tutorial)
-            //supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment()).commit()
-                //navigateToGallery()
-                navigateToPrompt("a cat in the building", null)
-            //navigateToResult("Butterfly on the Sky", ArtStyle.NONE)
+                supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment()).commit()
             else {
                 //튜토리얼 완료되었을때만 인텐트 핸들링
                 //implicit intent
@@ -87,6 +85,10 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
 
     override fun requestFinish() {
         finish()
+    }
+
+    override fun navigateToCoach() {
+        supportFragmentManager.beginTransaction().replace(R.id.frame, CoachMarkFragment()).commit()
     }
 
     override fun navigateToResult(prompt: String, artStyle: ArtStyle) {
