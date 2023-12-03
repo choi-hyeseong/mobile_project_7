@@ -26,6 +26,7 @@
             android:layout_alignParentTop="true"
             android:fontFamily="@font/jakarta"
             android:gravity="center"
+            android:textColor="@color/black"
             android:text="@string/gallery"
             android:textSize="32sp"
             android:textStyle="bold"
@@ -48,7 +49,7 @@
             app:spanCount="2" />
 
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnNextPage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -56,6 +57,7 @@
             android:layout_centerHorizontal="true"
             android:layout_gravity="center_horizontal"
             android:fontFamily="@font/jakarta"
+            android:textColor="@color/white"
             android:text="@string/create_image"
             android:background="@drawable/button_design"
             android:layout_margin="16dp"
