@@ -4,4 +4,10 @@
     <color name="white">#FFFFFFFF</color>
     <color name="light_purple">#4F51BE</color>
     <color name="back_color">#F1F8FF</color>
+
+    <color name="_bg__iphone_13_mini___41_ek2_color">#F1F8FF</color>
+    <color name="mindsnap_color">#000000</color>
+    <color name="_bg__generate_ek1_color">#4F51BE</color>
+    <color name="large_button_color">#FFFFFF</color>
+    <color name="_bg__button_ek3_color">#4361EE</color>
 </resources>

@@ -10,4 +10,12 @@
     <string name="create_image">Create Image</string>
     <string name="before_download">이미지를 저장한 후에 공유해주시길 바랍니다.</string>
     <string name="save_complete">이미지 저장이 완료되었습니다.</string>
+    <string name="input_prompt_string">Input Prompt</string>
+    <string name="generate">Generate</string>
+    <string name="art_style_string">Art Style</string>
+    <string name="fantasy_string">Fantasy</string>
+    <string name="no_style_string">No Style</string>
+    <string name="_3d_string">3D</string>
+    <string name="artistic_string">Artistic</string>
+    <string name="small_button_string">See All</string>
 </resources>
