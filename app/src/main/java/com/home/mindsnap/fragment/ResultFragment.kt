@@ -37,7 +37,7 @@ class ResultFragment : Fragment() {
             if (loading)
                 dialog?.show()
             else
-                dialog?.hide()
+                dialog?.dismiss() //dismiss로 해야 ui 안가리고 작동됨.
         }
 
         viewModel.resultImage.observe(viewLifecycleOwner) { image ->
