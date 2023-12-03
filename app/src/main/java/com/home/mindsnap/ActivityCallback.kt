@@ -6,6 +6,8 @@ interface ActivityCallback {
 
     fun navigateToTutorial()
 
+    fun navigateToCoach()
+
     //튜토리얼 완료해서 프래그먼트 이동
     fun navigateToGallery()
 

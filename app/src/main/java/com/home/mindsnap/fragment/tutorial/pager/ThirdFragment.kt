@@ -16,7 +16,12 @@ class ThirdFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        return ThirdLayoutBinding.inflate(inflater, container, false).root
+        return ThirdLayoutBinding.inflate(inflater, container, false).let {
+            it.btnNextPage.setOnClickListener {
+                callback?.navigateToCoach()
+            }
+            it.root
+        }
     }
 
     override fun onAttach(context: Context) {
