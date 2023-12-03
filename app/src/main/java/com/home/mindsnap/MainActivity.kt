@@ -37,33 +37,37 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
         super.onCreate(savedInstanceState)
         val bind = ActivityMainBinding.inflate(layoutInflater)
         setContentView(bind.root)
-        viewModel.isFirstJoined().observe(this) { tutorial ->
-            if (tutorial)
-                supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment()).commit()
-            else {
-                //튜토리얼 완료되었을때만 인텐트 핸들링
-                //implicit intent
-                if (intent.hasExtra(PROMPT)) {
-                    navigateToResult(
-                        intent.getStringExtra(PROMPT)!!,
-                        ArtStyle.fromString(intent.getStringExtra(ARTSTYLE) ?: "")
-                    ) //has check, art style은 빈값이 올 수 있음
-                }
-                else if (intent.data != null) {
-                    //deep link
-                    // am start -W -a android.intent.action.VIEW -d "intent://genimage?prompt=a dog&artstyle=3D" com.home.mindsnap 로 호출가능
-                    val uri = intent.data!!
-                    val prompt = uri.getQueryParameter(PROMPT.lowercase())
-                    val artStyle = uri.getQueryParameter(ARTSTYLE.lowercase()) ?: ""
-                    if (prompt != null)
-                        navigateToResult(prompt, ArtStyle.fromString(artStyle))
-                    else {
-                        Log.w(LOG_HEADER, "Deep link doesn't contain prompt parameter.")
-                        navigateToGallery() //좀더 깔끔하게 안되나..
+        if (savedInstanceState == null) {
+            //최초 한번만 인식해서 화면 회전은 무시
+            viewModel.isFirstJoined().observe(this) { tutorial ->
+                if (tutorial)
+                    supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment())
+                        .commit()
+                else {
+                    //튜토리얼 완료되었을때만 인텐트 핸들링
+                    //implicit intent
+                    if (intent.hasExtra(PROMPT)) {
+                        navigateToResult(
+                            intent.getStringExtra(PROMPT)!!,
+                            ArtStyle.fromString(intent.getStringExtra(ARTSTYLE) ?: "")
+                        ) //has check, art style은 빈값이 올 수 있음
                     }
+                    else if (intent.data != null) {
+                        //deep link
+                        // am start -W -a android.intent.action.VIEW -d "intent://genimage?prompt=a dog&artstyle=3D" com.home.mindsnap 로 호출가능
+                        val uri = intent.data!!
+                        val prompt = uri.getQueryParameter(PROMPT.lowercase())
+                        val artStyle = uri.getQueryParameter(ARTSTYLE.lowercase()) ?: ""
+                        if (prompt != null)
+                            navigateToResult(prompt, ArtStyle.fromString(artStyle))
+                        else {
+                            Log.w(LOG_HEADER, "Deep link doesn't contain prompt parameter.")
+                            navigateToGallery() //좀더 깔끔하게 안되나..
+                        }
+                    }
+                    else
+                        navigateToGallery()
                 }
-                else
-                    navigateToGallery()
             }
         }
     }
