@@ -1,5 +1,6 @@
 package com.home.mindsnap.module
 
+import com.home.mindsnap.BuildConfig
 import com.home.mindsnap.intercepter.OpenAIIInterceptor
 import com.home.mindsnap.repository.image.dao.openai.OpenAIGenService
 import dagger.Module
@@ -18,7 +19,7 @@ class NetworkModule {
 
 
     private val URL: String = "https://api.openai.com/v1/"
-    private val TOKEN: String = "" //TODO -> local로 옮길 예정
+    private val TOKEN: String = BuildConfig.API_KEY //숨겨진 API_KEY
 
     @Provides
     @Singleton
