@@ -1,10 +1,9 @@
 package com.home.mindsnap
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.viewModels
-import androidx.fragment.app.FragmentTransaction
+import androidx.appcompat.app.AppCompatActivity
 import com.home.mindsnap.databinding.ActivityMainBinding
 import com.home.mindsnap.fragment.ARTSTYLE
 import com.home.mindsnap.fragment.GalleryFragment
@@ -14,15 +13,9 @@ import com.home.mindsnap.fragment.ResultFragment
 import com.home.mindsnap.fragment.tutorial.CoachMarkFragment
 import com.home.mindsnap.fragment.tutorial.TutorialFragment
 import com.home.mindsnap.fragment.tutorial.WelcomeFragment
-import com.home.mindsnap.repository.gallery.dao.LocalGalleryDao
-import com.home.mindsnap.repository.user.PreferenceUserRepository
-import com.home.mindsnap.repository.user.dao.PreferenceUserDao
 import com.home.mindsnap.type.ArtStyle
-import com.home.mindsnap.usecase.GetUserFirstJoined
-import com.home.mindsnap.usecase.SaveUserVisited
 import com.home.mindsnap.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.runBlocking
 
 
 const val LOG_HEADER = "MINDSNAP"

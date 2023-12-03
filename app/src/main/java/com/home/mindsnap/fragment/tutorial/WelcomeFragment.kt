@@ -1,9 +1,7 @@
 package com.home.mindsnap.fragment.tutorial
 
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
-import android.os.SystemClock
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
@@ -15,8 +13,6 @@ import androidx.fragment.app.Fragment
 import com.home.mindsnap.ActivityCallback
 import com.home.mindsnap.R
 import com.home.mindsnap.databinding.WelcomeLayoutBinding
-import com.home.mindsnap.dialog.LoadingDialog
-import kotlin.concurrent.thread
 
 class WelcomeFragment : Fragment() {
 

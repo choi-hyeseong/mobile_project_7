@@ -1,12 +1,12 @@
 package com.home.mindsnap.repository.image.dao.openai
 
 import android.graphics.Bitmap
+import com.home.mindsnap.component.BitmapGenerator
 import com.home.mindsnap.repository.image.PromptGenerator
 import com.home.mindsnap.repository.image.dao.ImageGenDao
 import com.home.mindsnap.repository.image.dao.openai.request.ImageRequest
 import com.home.mindsnap.repository.image.dao.openai.response.ImageResponse
 import com.home.mindsnap.type.ArtStyle
-import com.home.mindsnap.component.BitmapGenerator
 import java.net.URL
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi

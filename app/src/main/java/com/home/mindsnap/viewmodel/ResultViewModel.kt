@@ -2,8 +2,6 @@ package com.home.mindsnap.viewmodel
 
 import android.content.Intent
 import android.graphics.Bitmap
-import android.net.Uri
-import androidx.core.content.FileProvider
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.home.mindsnap.R
@@ -19,7 +17,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel

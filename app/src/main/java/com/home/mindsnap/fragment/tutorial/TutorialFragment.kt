@@ -6,9 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import androidx.viewpager2.adapter.FragmentViewHolder
 import com.home.mindsnap.databinding.TutorialLayoutBinding
-import com.home.mindsnap.databinding.WelcomeLayoutBinding
 import com.home.mindsnap.fragment.tutorial.pager.FirstFragment
 import com.home.mindsnap.fragment.tutorial.pager.SecondFragment
 import com.home.mindsnap.fragment.tutorial.pager.ThirdFragment

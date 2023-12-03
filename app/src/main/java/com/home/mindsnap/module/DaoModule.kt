@@ -2,6 +2,7 @@ package com.home.mindsnap.module
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.home.mindsnap.component.BitmapGenerator
 import com.home.mindsnap.repository.gallery.dao.GalleryDao
 import com.home.mindsnap.repository.gallery.dao.LocalGalleryDao
 import com.home.mindsnap.repository.image.PromptGenerator
@@ -10,7 +11,6 @@ import com.home.mindsnap.repository.image.dao.openai.OpenAIGenService
 import com.home.mindsnap.repository.image.dao.openai.OpenAIImageGenDao
 import com.home.mindsnap.repository.user.dao.PreferenceUserDao
 import com.home.mindsnap.repository.user.dao.UserDao
-import com.home.mindsnap.component.BitmapGenerator
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -2,7 +2,6 @@ package com.home.mindsnap.fragment
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,7 +12,6 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.home.mindsnap.ActivityCallback
-import com.home.mindsnap.LOG_HEADER
 import com.home.mindsnap.R
 import com.home.mindsnap.databinding.ArtstyleLayoutBinding
 import com.home.mindsnap.databinding.PromptLayoutBinding

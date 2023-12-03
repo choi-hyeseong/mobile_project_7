@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
-import androidx.core.content.ContextCompat
 import com.home.mindsnap.databinding.DialogLayoutBinding
 
 class LoadingDialog(private val context : Context) : Dialog(context) {

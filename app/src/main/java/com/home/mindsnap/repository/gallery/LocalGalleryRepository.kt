@@ -1,13 +1,9 @@
 package com.home.mindsnap.repository.gallery
 
-import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import com.home.mindsnap.model.Image
 import com.home.mindsnap.repository.gallery.dao.GalleryDao
-import com.home.mindsnap.type.ArtStyle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 class LocalGalleryRepository(private val galleryDao: GalleryDao) : GalleryRepository {
 

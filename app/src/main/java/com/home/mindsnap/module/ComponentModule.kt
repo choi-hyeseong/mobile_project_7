@@ -1,7 +1,7 @@
 package com.home.mindsnap.module
 
-import com.home.mindsnap.repository.image.PromptGenerator
 import com.home.mindsnap.component.BitmapGenerator
+import com.home.mindsnap.repository.image.PromptGenerator
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

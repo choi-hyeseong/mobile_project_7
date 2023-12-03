@@ -19,10 +19,6 @@ import com.home.mindsnap.ActivityCallback
 import com.home.mindsnap.databinding.GalleryLayoutBinding
 import com.home.mindsnap.databinding.ImageLayoutBinding
 import com.home.mindsnap.model.Image
-import com.home.mindsnap.repository.gallery.LocalGalleryRepository
-import com.home.mindsnap.repository.gallery.dao.LocalGalleryDao
-import com.home.mindsnap.usecase.GetAllImages
-import com.home.mindsnap.usecase.ShareImage
 import com.home.mindsnap.viewmodel.GalleryViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
