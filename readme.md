@@ -104,6 +104,9 @@ Image Generator from Prompt Application
 
 ### 🖥️ 동작 과정
 
+<details>
+    <summary>펼치기</summary>
+
 ##### 액티비티
 * MainActivity
 
@@ -345,6 +348,9 @@ class SaveUserVisited(private val userRepository: UserRepository) {
 ##### 다른 애플리케이션과 상호작용
 * implicit intent
 * deep link
+
+</details>
+
 ## 4. 라이브러리
 
 ### ✔ Coroutine
