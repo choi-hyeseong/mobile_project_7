@@ -39,7 +39,7 @@ Image Generator from Prompt Application
 * 갤러리 서비스는 해당 앱에서 생성된 이미지를 저장하고, 불러와 화면에 보여주고, 이를 공유하는 기능을 갖고 있습니다.
 
 ### 🏃 Activity Diagram
-![스크린샷 2023-12-15 174937](https://github.com/choi-hyeseong/mobile_project_7/assets/114974288/f997cb77-1208-4146-96be-0ee72b9672a5)
+<img src="https://github.com/choi-hyeseong/mobile_project_7/assets/114974288/f997cb77-1208-4146-96be-0ee72b9672a5" height="500"/>
 * 위 유스케이스로부터 활동 다이어그램은 다음과 같습니다.
 
 ## 3. 상세 구현
