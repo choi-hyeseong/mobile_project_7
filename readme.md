@@ -226,8 +226,7 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
 ```
 추후 프래그먼트에서 다른 화면으로 전환될때 사용되는 콜백 인터페이스 입니다.<br/>
 프래그먼트가 액티비티에 접근하여 다른 화면으로 전환을 요청하는데 사용할 수 있습니다.
-<br/><br/>
-***
+
 ```kotlin
     private var callback: ActivityCallback? = null
 
