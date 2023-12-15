@@ -119,6 +119,8 @@ Image Generator from Prompt Application
 }
 ```
 맨 처음 onCreate() 메소드에서 MainViewModel의 isFirstJoined를 체크하여 튜토리얼이 진행되지 않은경우 튜토리얼 프래그먼트로 전환하고, 튜토리얼을 완료한경우 갤러리 프래그먼트로 전환합니다.
+<br/><br/>
+***
 
 * MainViewModel
 ``` kotlin
@@ -135,6 +137,8 @@ class MainViewModel @Inject constructor(getUserFirstJoined: GetUserFirstJoined) 
 해당 뷰모델에서는 로드시 유저의 튜토리얼 여부를 LiveData의 형태로 가져와 View에서 관측할 수 있게 firstJoinLiveData를 제공합니다.
 
 위 액티비티에서 볼 수 있듯이 뷰에서는 뷰모델의 LiveData를 observe하여 최초로 관측하거나, 값이 변경될때 이를 읽어올 수 있습니다. 또한, LiveData의 특성상 화면 회전과 같은 상황에서 다시 onCreate될때 저장된 값을 전달 해 주어 데이터를 보존할 수 있습니다.
+<br/><br/>
+***
 * GetUserFirstJoined
 ```kotlin
 class GetUserFirstJoined(private val userRepository: UserRepository) {
@@ -145,6 +149,8 @@ class GetUserFirstJoined(private val userRepository: UserRepository) {
 }
 ```
 해당 유스케이스는 유저 레포지토리에서 유저가 튜토리얼을 완료했는지(첫 접속인지 아닌지)를 반환합니다.
+<br/><br/>
+***
 * UserRepository
 ```kotlin
 interface UserRepository {
@@ -182,7 +188,8 @@ class PreferenceUserDao(private val preferences: SharedPreferences) : UserDao {
 이때 액티비티는 직접적으로 레포지토리에 접근하여 정보를 얻는것이 아닌, 유스케이스를 거쳐 데이터에 접근하므로 추후 레포지토리의 메소드나 구현체가 변경되더라도 유스케이스 내부의 코드만 수정하면 되니 액티비티의 코드를 수정할 필요가 없다는 장점이 있습니다.
 
 유저 또한 User 클래스를 만들어 Model로 사용할 수 있으나, 튜토리얼 여부 하나만 담고 있기엔 애매해서 따로 구성하지 않았습니다. 추후 추가적인 데이터의 저장, 관리가 필요할경우 User 모델을 생성하는것도 좋다고 생각합니다.
-
+<br/><br/>
+***
 * ActivityCallBack
 ``` kotlin
 interface ActivityCallback {
@@ -219,6 +226,8 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
 ```
 추후 프래그먼트에서 다른 화면으로 전환될때 사용되는 콜백 인터페이스 입니다.<br/>
 프래그먼트가 액티비티에 접근하여 다른 화면으로 전환을 요청하는데 사용할 수 있습니다.
+<br/><br/>
+***
 ```kotlin
     private var callback: ActivityCallback? = null
 
@@ -239,6 +248,8 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
 
 기존에 프래그먼트에서 액티비티에 접근할때 requireActivity().supportFragmentManager...를 사용하는것 대신 콜백으로 캐스팅하여<br/>
 callback?.navigate..의 형태로 좀더 편리하게 접근하고 재사용할 수 있겠습니다.
+<br/><br/>
+***
 ##### Tutorial
 * TutorialFragment
 ```kotlin
@@ -274,6 +285,8 @@ class TutorialFragment : Fragment() {
 ```
 튜토리얼을 미완료 했을경우 전환 되는 WelcomeFragment에서 연결되는 프래그먼트입니다. (환영합니다 버튼 클릭시~)<br/>
 단순한 튜토리얼 이미지를 가지고 있는 3개의 프래그먼트를 FragmentStateAdapter에 담아 ViewPager에 할당해줍니다.
+<br/><br/>
+***
 * CoachMarkFragment
 ```kotlin
 @AndroidEntryPoint
@@ -313,8 +326,9 @@ class CoachMarkFragment : Fragment() {
 튜토리얼의 마지막 프래그먼트입니다. 버튼을 클릭하면 뷰모델의 saveTutorialEnd 메소드를 호출하는것과 위의 MainActivity가 구현한 ActivityCallback을 사용하는 모습을 확인할 수 있습니다.</br>
 다만, 버튼을 클릭할때 프래그먼트를 전환하는것이 아닌 ViewModel의 tutorialLiveData를 관측하여 프래그먼트를 전환합니다. <br/>
 
-이는 뷰모델에서 유저 데이터의 저장이 비동기로 이루어지고 (현재는 동기식), 이후에 화면의 전환이 발생되어야 하는데 Fragment에서 바로 전환할경우 순서가 서로 뒤바뀌어 진행될 수 있어 위와 같은 방식을 택했고, 또한 MVVM 패턴에서도 Fragment에서 직접적으로 접근하는것 보단 livedata를 이용하는것이 좀더 적합하다고 생각되어 진행하였습니다. 
-
+이는 뷰모델에서 유저 데이터의 저장이 비동기로 이루어지고 (현재는 동기식), 이후에 화면의 전환이 발생되어야 하는데 Fragment에서 바로 전환할경우 순서가 서로 뒤바뀌어 진행될 수 있어 위와 같은 방식을 택했고, 또한 MVVM 패턴에서도 Fragment에서 직접적으로 접근하는것 보단 livedata를 이용하는것이 좀더 적합하다고 생각되어 진행하였습니다.
+<br/><br/>
+***
 * CoachMarkViewModel
 ```kotlin
 @HiltViewModel
@@ -339,7 +353,8 @@ class SaveUserVisited(private val userRepository: UserRepository) {
 }
 ```
 뷰모델에서는 버튼 클릭시 유저의 튜토리얼 여부를 유스케이스를 거쳐 저장하게 되고, 프래그먼트에게 화면 전환 여부를 LiveData에 담아 전달합니다.
-
+<br/><br/>
+***
 ##### 갤러리
 * GalleryFragment
 
