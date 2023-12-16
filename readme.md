@@ -105,7 +105,7 @@ Image Generator from Prompt Application
 ### 🖥️ 동작 과정
 
 <details>
-    <summary>펼치기</summary>
+    <summary style="font-weight:bold; text-decoration:underline">펼치기</summary>
 
 ##### 액티비티
 
