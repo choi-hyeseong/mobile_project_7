@@ -1030,7 +1030,7 @@ PromptGenerator는 입력받은 프롬프트와 화풍객체를 이용하여 문
 ```kotlin
 if (tutorial) {
     supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment()).commit()
-}   
+}
 else {
     //튜토리얼 완료되었을때만 인텐트 핸들링
     //implicit intent
@@ -1058,10 +1058,12 @@ else {
 
 }
 ```
+
 위 딥링크, 암시적 인텐트에 의해 MainActivity가 실행된 후, 튜토리얼이 완료된경우 위 요청이 처리됩니다. (튜토리얼 미 완료시 튜토리얼 화면 이동)
 <br/>
 암시적 인텐트의 경우 intent 필드에 값이 존재하므로 인텐트에 prompt extra와 화풍 extra값이 존재하면 최종 결과화면으로 이동합니다.
-<br/>deeplink의 경우 intent://genimage?prompt=a dog&artstyle=3D 와 같이 url에 데이터를 담아 전달하기 때문에 url 파라미터의 prompt와 화풍을 읽어온 뒤 값이 존재하면 최종 결과 화면으로 이동하게 됩니다.
+<br/>deeplink의 경우 intent://genimage?prompt=a dog&artstyle=3D 와 같이 url에 데이터를 담아 전달하기 때문에 url 파라미터의
+prompt와 화풍을 읽어온 뒤 값이 존재하면 최종 결과 화면으로 이동하게 됩니다.
 
 위 두가지 방식에서 프롬프트가 존재하지 않을경우 기존 절차대로 갤러리 화면으로 이동하게 되며, 화풍 데이터는 없을경우 미 지정된 상태로 설정되기 때문에 존재하지 않아도 됩니다.
 
@@ -1069,10 +1071,407 @@ else {
 
 ### ✔ Coroutine
 
+<img width="709" alt="coroutine" src="https://github.com/choi-hyeseong/mobile_project_7/assets/114974288/264a134b-1efb-4f0c-ad26-98d342daacf1">
+
+코루틴은 suspend(중단)과 resume(재시작)을 할 수 있는 함수를 생성하는 라이브러리 입니다.<br/>
+이는 light-weight thread로써 메인 쓰레드를 블락하지 않고, 다른 쓰레드를 통해 여러가지 무거운 작업들을 처리하며 안전하게<br/>
+결과값을 리턴하고, 메소드를 수행할 수 있습니다.
+
+* GalleryDao
+
+```kotlin
+    override suspend fun getAllImages(): List<Image> {
+    val dir = context.filesDir
+    val result = ArrayList<Image>()
+    dir.listFiles()?.let {
+        for (file: File in it) {
+            readImage(file.absolutePath)?.let { image ->
+                result.add(
+                    Image(
+                        file.name, image))
+            } //확장자 제거후 입력 -> 확장자 포함에서 입력
+        }
+    }
+    return result
+}
+
+private fun readImage(filePath: String): Bitmap? {
+    return BitmapFactory.decodeFile(filePath)
+}
+```
+
+* GalleryViewModel
+
+```kotlin
+private fun getAllImage() {
+    CoroutineScope(Dispatchers.IO).launch {
+        imageLiveData.postValue(getAllImages.getAllImages())
+    }
+}
+```
+
+GalleryDao에서 사용되는 suspend 함수입니다. 내부 저장소에서 File 객체를 가져오고, 이를 BitmapFactory를 통해 bitmap으로 읽어오는데, 이때
+FileIO와, 비트맵 디코딩은 상당한 시간이 소요될 수 있으므로, suspend 함수로 선언하여 코루틴 스코프 내에서만 처리되도록 하였습니다.
+<br/> 다만, suspend 함수라도 스코프 선언시 혹은 withContext 메소드를 사용하여 Dispatcher.Main을 사용할경우 메인 쓰레드에서 동작할 수 있어
+메인쓰레드를 블락하고, 동기적으로 작동할 수 있습니다.<br/>
+<br/> 이를 위해 IO 쓰레드로 코루틴 스코프를 열고, 해당 스코프 내에서 withContext에 주의하여 해당 메소드를 호출한 뒤 LiveData에 값을 담아 전달하였습니다.
+이때, LiveData의 값을 비동기적으로 설정할 수 있는 postValue 메소드를 사용하여 메인쓰레드가 아니더라도 값을 변경할 수 있게 하여 안전하게 절차를 진행할 수
+있었습니다.
+
+***
+
 ### 📱Retrofit
+
+![0_dzNrYLSkCA2xjfpq](https://github.com/choi-hyeseong/mobile_project_7/assets/114974288/b56c1451-5b3e-4de3-abaa-50a579e1e2d8)
+
+Retrofit은 웹 통신을 위한 라이브러리 입니다. 기존 OkHttp 라이브러리를 한단계 더 추상화한 것으로, 좀더 쉽고 명확하게 웹 요청과 응답을 보내고, 처리할 수 있습니다.
+
+<br/>기존 OkHttp, HttpConnection과 같은 '저 수준'의 방식에서는 웹 요청시 body에 데이터를 넣기 위해선 ObjectWriter등을 사용해 String,
+Map등을 직접 json object로 변경한뒤 입력해주어야 했습니다.
+<br/>또한, 응답으로 받은 json body또한 실제 클래스 / 액티비티에서 사용할 수 있도록 ObjectMapper를 이용해 객체로 변경해야 했습니다.<br/>
+이 과정에서 코드가 지저분해지고, Json을 읽고 쓰는 과정에서 또한 크래쉬등과 같은 문제가 발생했습니다.<br/>
+
+이를 Retrofit에서는 API Interface를 제공하고, Json 맵핑 과정을 클래스만 선언하면 자동으로 변환해주어 상당히 처리하기 좋았습니다.
+
+* OpenAiGenService
+
+````kotlin
+interface OpenAIGenService {
+
+    //body 붙여야 request body 인식
+    // request 요청시 영어로 올바른 문장을 써서 보내야 잘 인식함.
+    @POST("images/generations")
+    suspend fun generateImage(@Body request: ImageRequest): ImageResponse
+}
+````
+
+OpenAI에 이미지 생성 요청을 보내기 위한 서비스 인터페이스 입니다. 기존 OkHttp에서 URL을 설정하고, Response 콜백을 등록하는 과정 필요 없이 함수만 생성하고
+이를 직접적으로 사용하면 되서 상당히 간결화 되었습니다.
+
+* OpenAI Request / Response
+
+```kotlin
+package com.home.mindsnap.repository.image.dao.openai.request
+
+
+data class ImageRequest(
+    //request dto. serialized name 미 지정시 json 컨버팅중 오류 발생
+    @SerializedName("model")
+    val model: String = "dall-e-2",
+    @SerializedName("prompt")
+    val prompt: String,
+    @SerializedName("n")
+    val n: Int = 1,
+    @SerializedName("size")
+    val size: String = "1024x1024",
+    @SerializedName("response_format")
+    val responseFormat: String = "b64_json" //url도 가능
+)
+
+data class ImageResponse(@SerializedName("created") val created: Long,
+                         @SerializedName("data") val data: List<ImageDataResponse>)
+
+data class ImageDataResponse(@SerializedName("b64_json") val jsonData: String?,
+                             @SerializedName("url") val url: String?)
+```
+
+위와 같이 기존에 일일히 json으로 맵핑해야 했던 body또한 data class를 이용하여 깔끔하게 생성하고 불러울 수 있습니다.
+
+* NetworkModule
+
+```kotlin
+    @Provides
+@Singleton
+fun provideOpenAIService(retrofit: Retrofit): OpenAIGenService {
+    return retrofit.create(OpenAIGenService::class.java)
+}
+```
+
+이렇게 생성된 인터페이스는 Retrofit 객체를 이용하여 실제 구현체가 생성되고, 저 함수를 호출할경우 API 요청이 보내지게 됩니다.
+<br/>이때 웹 요청또한 비동기로 진행되어야 하므로 suspend 함수를 사용하여 코루틴 스코프 내에서만 호출되도록 하였으며, 실제 호출시 IO Dispatcher에서 수행되게
+됩니다.
+***
 
 ### 🗡️ Hilt
 
-### 🛠️ Mockk
+![1_MA45ld5TZbYFlpowpVjimg (1)](https://github.com/choi-hyeseong/mobile_project_7/assets/114974288/0e292ad1-2e26-4126-b5ad-720f6a734f71)
 
+Hilt는 기존 DI 라이브러리인 Dagger를 기반으로 제작된 라이브러리 입니다.
+<br/>DI란 Dependency Injection으로, 해당 클래스내에서 필요한 객체가 생성되고 같이 소멸되는 Composition방식이 아닌, 생성자의 필드로써 입력되는
+Aggresigation의 방식입니다. <br/>
+
+이는 기존 클래스에 필요한 서브 객체 (ViewModel에서는 UseCase, UseCase는 Repository..) 등등을 주입하는 과정으로써, 필요한 객체를 Module에서
+생성하고, 이를 필요한 다른 모듈, 객체의 생성자에 주입해 객체를 재사용하고, 결합도를 낮춰 유지보수에 용이합니다.
+<br/>즉, 객체의 생성을 Hilt에게 위임해 관리할 수 있습니다.
+
+![a1b8656d7fc17b7d](https://github.com/choi-hyeseong/mobile_project_7/assets/114974288/b62b1b15-6c44-4aa0-82d7-3895bbf3716f)
+
+한가지 예를 들자면, 유저의 튜토리얼 여부를 저장하는 SaveUserVisited 유스케이스와 유저의 튜토리얼 여부를 반환하는 GetUserFirstJoined 유스케이스는
+UserRepository에 접근하여 정보를 가져오고 수정합니다.
+
+* UseCase
+
+```kotlin
+class GetUserFirstJoined(private val userRepository: UserRepository) {
+
+    fun isFirstJoined(): Boolean {
+        return userRepository.isFirstJoined()
+    }
+}
+class SaveUserVisited(private val userRepository: UserRepository) {
+
+    fun saveVisited() {
+        userRepository.saveVisit()
+    }
+}
+```
+
+이때, 두 유스케이스는 동일한 레포지토리를 참조해야 하며, 다른 레포지토리를 참조할경우 예상하지 못한 오류가 발생할 수 있습니다.
+<br/>이를 해결하기 위해 UserRepository를 싱글톤으로 선언해야 합니다.
+
+* UserRepository - fix
+
+```kotlin
+class UserRepository {
+    companion object {
+        val instance = UserRepository()
+    }
+}
+UserRepository.instance 
+```
+
+다만, 위 방식은 레포지토리와 유스케이스가 강하게 결합하여, 추후 사용하는 DB나 레포지토리에 변경이 생길경우 수정하기 까다로워질 수 있습니다.<br/>
+이때 hilt의 DI를 이용하면 싱글톤 선언 없이 같은 객체를 두 유스케이스에 주입할 수 있습니다.
+
+* DaoModule
+
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+class DaoModule {
+
+    private val PREFERENCE = "IMAGE_GEN"
+
+    @Provides
+    @Singleton
+    fun provideImageGenDao(promptGenerator: PromptGenerator,
+                           openAIGenService: OpenAIGenService,
+                           bitmapGenerator: BitmapGenerator): ImageGenDao {
+        return OpenAIImageGenDao(promptGenerator, openAIGenService, bitmapGenerator)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSharedPreference(@ApplicationContext context: Context): SharedPreferences {
+        return context.getSharedPreferences(PREFERENCE, Context.MODE_PRIVATE)
+    }
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+class RepositoryModule {
+
+    @Provides
+    @Singleton
+    fun provideUserRepository(userDao: UserDao): UserRepository {
+        return PreferenceUserRepository(userDao)
+    }
+
+}
+```
+
+* UseCaseModule
+
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+class UseCaseModule {
+
+    //만약 리팩토링 한다면 각 레포지토리 - dao별로 묶어서 모듈 구성하면 좋을듯
+
+    @Provides
+    @Singleton
+    fun provideGetUserFirstJoined(userRepository: UserRepository): GetUserFirstJoined {
+        return GetUserFirstJoined(userRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSaveUserVisited(userRepository: UserRepository): SaveUserVisited {
+        return SaveUserVisited(userRepository)
+    }
+
+}
+```
+
+* MainViewModel
+
+```kotlin
+//HiltViewModel을 이용한 Module 주입
+@HiltViewModel
+class MainViewModel @Inject constructor(getUserFirstJoined: GetUserFirstJoined) : ViewModel() {
+
+    private val firstJoinLiveData: LiveData<Boolean> =
+        MutableLiveData(getUserFirstJoined.isFirstJoined())
+
+    fun isFirstJoined(): LiveData<Boolean> {
+        //이렇게 해야 매 rotation시 로드 안함
+        return firstJoinLiveData
+    }
+
+}
+```
+
+* MainActivity
+
+```kotlin
+@AndroidEntryPoint
+class MainActivity : AppCompatActivity(), ActivityCallback {
+
+    private val viewModel: MainViewModel by viewModels() //hilt viewmodel 생성 위임
+}
+```
+
+hilt의 Module을 선언하고, 객체를 제공할 수 있는 Provide annotation을 작성한 함수를 선언해, 해당 객체를 생성할 수 있습니다.
+<br/>이렇게 생성된 Dao는 Repository의 생성 함수의 파라미터로 들어가고, 이 레포지토리 또한 유스케이스 생성 함수의 파라미터로 들어가 구성됩니다.
+<br/>
+
+이를 통해 싱글톤 선언 없이 안전하게 객체를 주입할 수 있고, 나중에 Repository가 변경되더라도 Module의 생성 함수의 파라미터를 변경하여 쉽게 수정할 수 있습니다.
+<br/>추가로, 생성자 DI를 이용한 구조 덕분에 밑에 언급될 Mock을 이용한 테스트 객체를 생성하고, 이를 주입해 단위 테스트에도 적합한 구조를 만들 수 있습니다.
+***
+### 🛠️ MockK
+![img1 daumcdn](https://github.com/choi-hyeseong/mobile_project_7/assets/114974288/a321efe8-ca46-4cd3-9469-78cd6c7896e9)
+
+MockK은 테스트용 더미 객체를 생성하고, 이를 이용하여 단위 테스트를 할 수 있는 프레임워크입니다.
+<br/>기존 안드로이드 앱을 테스트 하기 위해선 가상머신을 키고, 로그를 찍어서 원하는 flow대로 동작하는지 확인해야 했었습니다.
+<br/>다만, 런타임이 아니더라도 테스트할 수 있는 코드를 가상머신을 키고 테스트하면서 상당한 시간이 걸리는 부분이 있습니다.
+
+<br/>추가로, 코드를 수정했는데 다른 부분이 고장나는 경우도 많아서 런타임 도중 처음부터 다시 다 테스트 하기엔 상당한 시간이 소요된다는 점도 한몫했습니다.
+
+이를 MockK 라이브러리와 junit을 이용하여 조금이나마 해결할 수 있었습니다.
+* LocalGalleryRepositoryTest
+```kotlin
+class LocalGalleryRepositoryTest {
+    lateinit var repository: GalleryRepository
+
+    @Before
+    fun init() {
+        val dao = mockk<GalleryDao>()
+        coEvery { dao.getAllImages() } returns listOf(mockk<Image>(), mockk<Image>())
+        repository = LocalGalleryRepository(dao)
+        //2개의 리스트 반환
+    }
+
+    @Test
+    fun TEST_GET_ALL_IMAGE() {
+        runBlocking {
+            assertEquals(repository.getAllImages().size, 2)
+        }
+    }
+}
+```
+갤러리 레포지토리 테스트 클래스입니다. 실제 가상머신에서 데이터를 불러오고, 저장되는지 확인해야 할 수 있습니다 <br/>
+하지만, ViewModel - UseCase - Repository - Dao 순으로 요청의 위임이 진행되는데, 이 과정에서 요청된 자료가 잘못 호출되는지 여부를 확인 하기 위해선 테스트가 필요합니다. 위 테스트를 통해 Repository에서 Dao로 요청이 전송되고, 해당 요청을 통해 정상적으로 값을 반환하는 지 확인할 수 있습니다. 
+
+* OpenAiImageGenDaoTest
+```kotlin
+
+class OpenAIImageGenDaoTest {
+
+    lateinit var dao: OpenAIImageGenDao
+    lateinit var response: ImageResponse
+    lateinit var promptGenerator: PromptGenerator
+    lateinit var service: OpenAIGenService
+    @Before
+    fun init() {
+        promptGenerator = PromptGenerator()
+        service = mockk<OpenAIGenService>()
+        val bitmapGenerator = mockk<BitmapGenerator>()
+
+        dao = OpenAIImageGenDao(promptGenerator, service, bitmapGenerator)
+        every { bitmapGenerator.decodeByte(any()) } returns mockk()
+        every { bitmapGenerator.decodeStream(any()) } returns mockk()
+
+
+    }
+
+    @Test
+    fun TEST_URL_TO_BITMAP() {
+
+        val data = ImageDataResponse(
+            null,
+            "https://img.gigglehd.com/gg/files/attach/images/158/293/986/006/5b89d99dce8ad12da73d6513da4e1d42.JPG")
+        response = ImageResponse(java.lang.System.currentTimeMillis(), listOf(data))
+        runBlocking {
+            assertNotNull(dao.decodeImage(response))
+        }
+    }
+
+    @Test
+    fun TEST_JSON_TO_BITMAP() {
+        val data = ImageDataResponse(
+            "/9j/4AAQSkZJRgABAQEAYABgAAD/4RBmRXhpZgAATU0AKgAAAAgAAwESAAMAAAABAAEAAIdpAAQAAAABAAAIPuocAAcAAAgMAAAAMgAAAAAc6gAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB6hwABwAACAwAAAhQAAAAABzqAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/4QjdaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLwA8P3hwYWNrZXQgYmVnaW49J++7vycgaWQ9J1c1TTBNcENlaGlIenJlU3pOVGN6a2M5ZCc/Pg0KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyI+PHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIi8+PC94OnhtcG1ldGE+DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg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",
+            null)
+        response = ImageResponse(java.lang.System.currentTimeMillis(), listOf(data))
+        runBlocking {
+            assertNotNull(dao.getImage("asdf", ArtStyle.NONE))
+        }
+
+    }
+}
+```
+
+이러한 점을 들어 웹 요청 또한 정상적으로 위임이 진행되어 요청이 잘 보내지는지 확인할 수 있습니다.
+
+이때, 실제로 요청을 보내고 응답을 받을 수 없으니 '모의 객체'라는것을 생성해 테스트를 수행할 수 있습니다.
+<br/>모의 객체는 해당 객체의 필드, 메소드를 테스트 조건에 맞게 수정할 수 있으며 mockk메소드로 생성할 수 있습니다.
+
+위 테스트에서 every 조건과 any() 를 통해 어떤 요청이 들어와도 모의 객체를 반환한다는 점을 확인할 수 있습니다.
+
+최종적으로 assertNotNull, assert문을 통해 테스트하는 객체의 결과값이 예상한 결과값과 같을경우 해당 테스트는 성공적으로 수행되며, 테스트를 통과하지 못했을경우 해당 객체의 문제를 해결하는 방식으로 이를 수행할 수 있습니다.
+<br/>추가로, 기존 테스트 프레임워크는 코틀린과 coroutine의 suspend메소드를 지원하지 않는데, MockK라이브러리의 coEvery{} 조건등을 통해 테스트를 정상적으로 수행할 수 있습니다.
+
+이를 통해 모델 객체부터, 외부 액티비티까지 문제를 검증하며 개발을 수행해나가는 TDD (Test-Driven-Development) 테스트 주도 개발의 형태로 개발을 수행할 수 있습니다. 다만, 아직까진 테스트에 익숙하지 않아 모든  객체의 테스트를 생성하기 어려워 나머지는 런타임 테스트로 수행했다는점이 좀 아쉬웠습니다.
+
+* StringDataTest
+```kotlin
+class StringDataTest {
+
+
+    @Test
+    fun CHECK_IS_RESOURCE() {
+        val data = StringData(15, null)
+        assertTrue(data.isResourceMessage())
+    }
+
+    @Test
+    fun CHECK_IS_NOT_RESOURCE() {
+        val data = StringData(message = "테스트")
+        assertFalse(data.isResourceMessage())
+    }
+
+    @Test
+    fun TEST_GET_STRING_NO_PARAM() {
+        val data = StringData(15, null)
+        val context = mockk<Context>()
+
+        every { context.getString(any()) } returns ""
+        data.getResourceMessage(context)
+        verify(exactly = 1) { context.getString(any()) } 
+    }
+
+    @Test
+    fun TEST_GET_STRING_PARAM() {
+        val data = StringData(15, null, "배고파")
+        val context = mockk<Context>()
+
+        every { context.getString(any(), any()) } returns ""
+        data.getResourceMessage(context)
+        verify(exactly = 1) { context.getString(any(), any()) } //verify는 다 수행하고 맨 마지막에..
+    }
+}
+```
+![스크린샷 2023-12-18 145104](https://github.com/choi-hyeseong/mobile_project_7/assets/114974288/0298da98-3d53-444a-a82f-8876d91e3a7f)
+
+***
 ## 5. Error handling
