@@ -1475,3 +1475,248 @@ class StringDataTest {
 
 ***
 ## 5. Error handling
+
+#### · 화면 회전시 첫 화면으로 돌아가는 문제
+
+안드로이드 앱 내에서는 화면 회전시 onDestory와 onCreate를 거쳐 앱의 lifecycle이 변경됩니다. 이때, 기존에 저장되지 않은 데이터는 제거되는 경우가 있습니다.<br/>
+이를 방지하기위해 SavedInstanceState, ViewModel등을 이용해 데이터를 저장하고 복원하는 과정을 거칩니다.
+
+프래그먼트를 관리하는 FragmentManager는 화면 회전시 기존 저장된 프래그먼트를 다시 불러오는 과정을 거쳐 따로 데이터를 저장하고 불러 올  필요 없이 스스로 복구를 진행합니다. 
+
+* MainActivity
+```kotlin
+onCreate() {
+  viewModel.isFirstJoined().observe(this) { tutorial ->
+    if (tutorial)
+      supportFragmentManager.beginTransaction().replace(R.id.frame, WelcomeFragment())
+        .commit()
+        ...
+  }
+}
+```
+초기에는 이를 알지 못해 onCreate에서 바로 viewModel을 observe해서 프래그먼트를 바꿔주는 작업을 수행했습니다. 이 때문에 이미지 생성을 하는 도중에 화면 회전이 발생하면 초기 화면으로 돌아가는 문제가 있었습니다.
+
+```kotlin
+ if (savedInstanceState == null) {
+  //최초 한번만 인식해서 화면 회전은 무시
+  viewModel.isFirstJoined().observe(this) { tutorial ->
+  }
+}
+```
+위에서 언급한것처럼 프래그먼트 매니저는 화면 회전시 기존 뷰를 복구하므로 최초로 activity가 초기화 됐을때인 savedInstanceState가 null일때만 프래그먼트를 전환하도록 하여 해결하였습니다.
+***
+#### · Hilt 적용 문제
+
+hilt는 프록시 객체를 생성해 의존성 주입을 담당하기 때문에 기존 코틀린 컴파일 도구인 kapt의 의존성이 필요합니다. 이 과정에서 코틀린 버전과 호환성 문제가 발생해 오류가 발생했습니다.
+
+이는 hilt와 kotlin, kapt 버전을 서로 호환되게 맞추어 해결하였습니다.
+***
+#### · Junit Test 코틀린 미지원
+
+단위 테스트 도구인 Junit을 사용하기 위해 Test클래스를 사용하고자 했으나 작동하지 않았습니다.
+<br/>코틀린에서는 자바 기반의 Junit이 작동하지 않는다는것을 알게 되었고, 호환되는 MockK을 사용해 해결하였습니다.
+***
+#### · ViewModel Context 접근
+
+MVVM 패턴에서는 뷰의 기능을 처리하는 Activity / Fragment와 실제적인 모델의 기능을 처리하는 ViewModel 간의 상호작용으로 이루어집니다.
+
+이는 뷰와 모델간의 결합도를 떨어트리기 좋은 구조이지만, 실제 모델의 기능을 처리할때 Context의 기능이 필요한 경우가 있습니다.<br/>
+
+예를 들어 API서버로 요청을 보냈을때 오류가 발생했을경우 Toast등을 사용해서 유저에게 문제가 발생한것을 알려줄 필요가 있습니다.
+
+이때 Toast를 사용하기 위해선 Context 객체가 필요한데, ViewModel에서는 이를 사용할 수 없습니다. <br/>
+ViewModel에서 Context에 접근하는것은 메모리 누수등의 위험성이 있고, 뷰를 담당하는 Context를 뷰모델에서 접근하면 모델과의 결합성이 커질 수 있기 때문입니다.
+
+이를 해결하기 위해 LiveData를 사용하였습니다.
+
+메모리 누수를 걱정할 필요 없는 AndroidViewModel이라는 객체를 상속받는 방법도 있으나, ViewModel에서는 Context의 기능을 사용하지 않는것이 좋을것 같아 다음과 같이 처리하였습니다.
+
+```kotlin
+ val responseLiveData : MutableLiveData<String> = MutableLiveData()
+```
+ViewModel의 LiveData를 사용하여 실제 Context에 접근하지 않고, 내부 데이터만 뷰로 전달해 뷰가 이를 실행하는 방식입니다.
+
+LiveData의 특성상 observe를 수행하면 마지막으로 설정된 값을 다시 notify하게 됩니다.
+
+이때, LiveData<String>으로 설정이 되어 있고, 이를 Toast로 호출하게 된다면
+```kotlin
+viewModel.liveData.observe() {
+    Toast~ 
+}
+```
+매 화면 회전시 Toast가 발생하는 문제가 있습니다. Toast는 한번 호출된 이후 다시 호출되서는 안되기 때문에 Event 클래스를 만들어 감쌌습니다.
+
+* Event
+```kotlin
+open class Event<T>(private val content : T) {
+    //toast와 같은 1회성 이벤트를 livedata에 넣을경우 화면 회전등과 같이 갱신시 지속적으로 호출되는 문제 해결하는 클래스
+    var isHandled : Boolean = false
+        private set
+
+    fun getContent() : T? {
+        if (isHandled)
+            return null
+        else {
+            isHandled = true
+            return content
+        }
+    }
+
+    fun getContentForce() : T = content
+}
+
+```
+Event 클래스의 getContent를 하면 이미 값을 가져온경우 null을 리턴하고, 값을 가져오지 않은경우 값을 반환한 뒤 isHandled 변수를 true로 변경해 다시 값을 가져오지 못하게 설정합니다.
+
+추가로 이렇게 전달되는 String을 문자열로 하드코딩 하는 대신 string.xml을 이용해서 리소스 id를 받게 하고, 언어 호환성을 높일 수 있는 방법또한 생각해보았습니다.
+* StringData
+```kotlin
+class StringData(private val resID : Int = -1, val message : String?, private vararg val param : String) {
+
+  fun isResourceMessage() : Boolean {
+    return resID != -1
+  }
+
+  fun getResourceMessage(context: Context) : String {
+    return if (!isResourceMessage())
+      ""
+    else
+      if (param.isEmpty()) {
+        context.getString(resID)
+      }
+      else {
+        context.getString(resID, param)
+      }
+  }
+}
+```
+string.xml의 문자열 리소스는 리소스 id를 이용하여 접근할 수 있습니다. 리소스 id로부터 문자열을 가져오기 위해선 Context 객체가 필요한데,<br/>
+이는 isResourceMessage로 리소스 메시지 여부를 확인하고 getREsourceMessage를 통해 Context를 받아 문자열을 가져올 수 있게 하였습니다.
+
+```kotlin
+val toastLiveData = MutableLiveData<Event<StringData>>()
+```
+
+* ResultFragment
+```kotlin
+ viewModel.toastLiveData.observe(viewLifecycleOwner) { event ->
+            event.getContent()?.let {
+              //Toast가 처음 처리 되는 경우  
+              val message =
+                    if (it.isResourceMessage()) it.getResourceMessage(requireContext()) else it.message
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            }
+        }
+```
+
+따라서 ViewModel이나 LiveData에서 Context에 접근할 필요 없이 로직을 처리할 수 있었습니다.
+***
+
+#### · 내부 파일 공유
+앱에서 생성된 이미지는 앱 내부 저장소에 저장됩니다. (LocalGalleryRepository)
+<br/> 이렇게 생성된 이미지를 공유하기 위해선 Intent에 담아서 요청해야 했습니다.
+
+```kotlin
+
+import java.io.FileOutputStream
+
+override fun shareImage(fileName: String): Intent {
+  return Intent(Intent.ACTION_SEND).apply {
+    type = "image/*"
+    putExtra(
+      Intent.EXTRA_STREAM,
+      FileOutputStream(fileName)
+    )
+  }
+}
+```
+Intent의 Action_Send와 Extra에 이미지 stream을 담아 이미지 공유를 요청할 수 있습니다.
+<br/>하지만 위 메소드는 오류가 발생했습니다.
+
+> android.os.TransactionTooLargeException : data parcel size 1002388 bytes
+
+컴포넌트간 데이터 공유를 할때 사용되는 Intent의 Extra로 이미지 객체를 전송하기엔 너무 크다는 오류였습니다.
+
+이를 해결하기 위해 Extra에 이미지 객체를 넣는것이 아닌, URI을 넣어 직접 외부에서 참조 할 수 있도록 하였습니다.
+```kotlin
+putExtra(Intent.EXTRA_STREAM, File(fileName).toURI())
+```
+
+하지만 이것도 오류가 발생했습니다.
+
+> java.lang.Throwable: file:// Uri exposed
+
+api 24 이후로는 file:// 로 시작하는 uri를 직접 사용할 수 없다는 이유였습니다.
+
+이를 해결하기 위해 이미지를 앱 내부가 아닌 갤러리 앱에서 사용할 수 있도록 저장 위치를 바꾸는 방법과, 다른 공유 방식을 선택하는것이였습니다.
+
+다행히, 앱 컴포넌트중 하나인 ContentProvider의 구현체, FileProvider를 이용하여 해결할 수 있었습니다.
+
+* Manifests
+```xml
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.home.mindsnap.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+```
+* LocalGalleryDao
+```kotlin
+return Intent(Intent.ACTION_SEND).apply {
+            type = "image/*"
+            putExtra(
+                Intent.EXTRA_STREAM,
+                FileProvider.getUriForFile(
+                    context,
+                    "com.home.mindsnap.fileprovider",
+                    File(context.filesDir, name)))
+        }
+```
+다음과 같이 FileProvider를 이용, 해당 Provider의 uri를 이용하여 공유하니 정상적으로 이미지를 전달할 수 있었습니다.
+<br/>이때 context가 필요했는데, 위의 **ViewModel에서 context 접근** 단락에서 언급했다 시피 View와 관련된 Context를 모델과 연결시키는 것은 좋지 않았습니다.
+
+하지만, Intent 생성을 위해 context의 접근이 필요했고, 이를 해결하기 위해 전역 Context로 메모리 누수를 걱정할 필요 없는 ApplicationContext를 Hilt로 주입하여 사용하였습니다.
+
+```kotlin
+  @Provides
+    @Singleton
+    fun provideGalleryDao(@ApplicationContext context: Context) : GalleryDao {
+        return LocalGalleryDao(context)
+    }
+```
+만약 이 또한 Context랑 분리시키기 위해선 Intent를 LiveData로 공유하는것이 아닌, Extra에 들어갈 FileProvider로 생성한 Uri를 LiveData에 담아 뷰로 전달하고, 뷰는 이를 인텐트로 가공하여 전달할 수 있게하면 좋을것 같다고 생각했습니다.
+
+```kotlin
+val shareLiveData = mutableLiveData<URI>()
+shareLiveData.value = FileProvider~
+
+shareLiveData.observe() {
+    Intent(Action_Send).apply {
+        putExtra(Stream, it)
+    }
+}
+
+```
+
+#### · Context Mock 문제
+
+마지막 Error Handling 입니다.<br/>
+테스트 도중 Context의 메소드를 사용하기 위해 모의 객체를 생성할 필요가 있었습니다.
+<br/> 하지만 기존에 사용하던 모의 객체 생성 라이브러인 Mockito는 Context가 Mock됐다며 테스트가 수행되지 않았습니다.
+
+```kotlin
+  @Test
+    fun TEST_GET_STRING_NO_PARAM() {
+        val data = StringData(15, null)
+        val context = mockk<Context>()
+
+        every { context.getString(any()) } returns ""
+        data.getResourceMessage(context)
+        verify(exactly = 1) { context.getString(any()) } 
+    }
+```
+이를 해결할 방법을 찾던중, suspend 함수도 테스트할 수 있는 MockK라이브러리를 찾아냈고 이를 이용해 해결하였습니다. 
