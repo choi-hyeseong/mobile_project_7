@@ -20,6 +20,7 @@ Image Generator from Prompt Application
 
 * 노션(회의록) : https://www.notion.so/7-23857ccb328740d181ad91d9309be9cc
 * 피그마(UI) : https://www.figma.com/file/oSKBYcNnNNcsLSYmDcOWFp/MindSnap
+* 호출 테스트 앱 : https://github.com/choi-hyeseong/MindSnapCall
 
 ## 2. 구조
 
